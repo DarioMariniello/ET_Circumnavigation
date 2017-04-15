@@ -1,0 +1,4 @@
+desired_distance: 3.0
+alpha: 0.5
+k_fi: 1
+k_d: 1

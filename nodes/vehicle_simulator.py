@@ -7,7 +7,7 @@ import threading as thd
 
 import numpy as np
 
-import circumnavigation_moving_target.srv as dns
+import ET_circumnavigation.srv as dns
 
 
 LOCK = thd.Lock()
@@ -43,6 +43,7 @@ rp.Service('RemoveVehicle', dns.RemoveAgent, remove_vehicle_handler)
 pub = rp.Publisher('position', gms.Point, queue_size=10)
 
 
+#Subscriber
 def cmdvel_callback(msg):
     global velocity
     LOCK.acquire()

@@ -7,22 +7,23 @@ import threading as thd
 import numpy as np
 import math
 import copy as cp
-import circumnavigation_moving_target.srv as dns
+import ET_circumnavigation.srv as dns
 import geometry_msgs.msg as gm
+
 
 # Variables
 position = None
 estimate = None
+est_distance=0
 # Vector fi of the agent
 bearing_measurement = None
-
-
-
 # Parameters
 DESIRED_DISTANCE = rp.get_param('desired_distance')  # from the .yaml file
 alpha= rp.get_param('alpha') # from the .yaml file
 k_fi= rp.get_param('k_fi')
 k_d= rp.get_param('k_d')
+estimate_gain= rp.get_param('estimate_gain')
+
 
 node_name=rp.get_param('node_name')
 delay=rp.get_param('delay')
@@ -31,6 +32,7 @@ delay=rp.get_param('delay')
 LOCK = thd.Lock()
 
 stop_publish=False
+
 
 rp.sleep(delay)
 rp.init_node('planner') 
@@ -60,6 +62,7 @@ def agent_callback(msg, name):
     LOCK.acquire()
     agent_bearing_measurement[name] = [msg.x, msg.y]
     LOCK.release()
+
 
 
 bearing_measurement_subscribers={}
@@ -146,6 +149,18 @@ rp.Subscriber(
     callback=estimate_callback,
     queue_size=10)
 
+def est_distance_callback(msg):
+    global est_distance
+    LOCK.acquire()
+    est_distance = msg.point.x
+    LOCK.release()
+rp.Subscriber(
+    name='est_distance',
+    data_class=gm.PointStamped,
+    callback=est_distance_callback,
+    queue_size=10)
+
+
 RATE = rp.Rate(150.0)
 start = False
 
@@ -162,7 +177,7 @@ beta_pub = rp.Publisher(
 
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
-    if all([not data is None for data in [position, estimate, bearing_measurement]]):
+    if all([not data is None for data in [position, estimate, bearing_measurement,est_distance]]):
            start = True
     #else:
         #rp.logwarn('waiting for measurements')
@@ -186,9 +201,10 @@ while not rp.is_shutdown():
     beta=0
     if len(agent_beta)>0:
         beta=min(agent_beta)
-    #Control law
-    est_dist = np.linalg.norm(estimate-position)
-    vel = k_d*bearing_measurement*(est_dist-DESIRED_DISTANCE)+k_fi*est_dist*phi_bar*(alpha+beta)
+
+
+
+    vel = 2*k_d*bearing_measurement*(est_distance-DESIRED_DISTANCE)+2*k_fi*est_distance*phi_bar*(alpha+beta)
     #Velocity message
     cmdvel_msg = gms.Vector(x=vel[0], y=vel[1])
     #Beta message

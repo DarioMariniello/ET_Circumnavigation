@@ -7,7 +7,7 @@ import threading as thd
 import numpy as np
 import math
 import copy as cp
-import circumnavigation_moving_target.srv as dns
+import ET_circumnavigation.srv as dns
 
 agent_names=[]
 add_agent_proxies={}
