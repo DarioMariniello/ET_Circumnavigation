@@ -10,23 +10,27 @@ import ET_circumnavigation.srv as dns
 
 
 #Paramaters
-estimate_gain=rp.get_param('estimate_gain') #from the .yaml file
-#Initial estimate
-estimate=np.array(rp.get_param('initial_estimate')) #from the .launch file
-position=np.array(rp.get_param('initial_position'))
+estimate_gain=rp.get_param('estimate_gain')
+desired_dist=rp.get_param('desired_distance')
+TARGET_POSITION=np.array(rp.get_param('target_position'))
+
+#Variables
+estimate=None
+position=None
 d_estimate=None
 bearing_measurement=None
 initial_est_dist=None
 truemeasure=None
-TARGET_POSITION=np.array(rp.get_param('target_position'))
+est_distance=None
+
 #Lock
 LOCK=thd.Lock();
 
-stop=False
-stop_publish=False
+#stop=False
+#stop_publish=False
 
-delay=rp.get_param('delay')
-rp.sleep(delay)
+#delay=rp.get_param('delay')
+#rp.sleep(delay)
 rp.init_node('estimate')
 
 FREQUENCY = 15e1
@@ -36,19 +40,16 @@ TIME_STEP = 1.0/FREQUENCY #Integration step
 
 
 
-# Handler for the service "RemoveSensor"
-def remove_estimate_handler(req):
-    global stop_publish   
-    LOCK.acquire()
-    stop_publish=True
-    LOCK.release()
-    return dns.RemoveAgentResponse()
+# Handler for the service "RemoveEstimate"
+# def remove_estimate_handler(req):
+#     global stop_publish   
+#     LOCK.acquire()
+#     stop_publish=True
+#     LOCK.release()
+#     return dns.RemoveAgentResponse()
 
-rp.Service('RemoveEstimate', dns.RemoveAgent, remove_estimate_handler)
+# rp.Service('RemoveEstimate', dns.RemoveAgent, remove_estimate_handler)
 
-
-
-#This node publishes the estimate of the target position and subscribes to the agent position topic and to the bearing measurements vector(phi)
 
 #Subscribers
 def position_callback(msg):
@@ -86,7 +87,9 @@ rp.Subscriber(
 
 
 
-#Publisher
+#Publishers
+
+#Estimate
 estimate_pub = rp.Publisher(
     name='estimate',
     data_class=gms.Point,
@@ -105,47 +108,30 @@ error_pub = rp.Publisher(
     queue_size=10)
 
 start = False
+
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
     if all([not data is None for data in [position, bearing_measurement,truemeasure]]):
            start = True
-    #else:
-        #rp.logwarn('waiting for position and measurements')
     LOCK.release()
-    #Initial estimate and est_distance publishing
-    estimate_pub.publish(gms.Point(x=estimate[0], y=estimate[1]))
-    initial_est_dist=np.linalg.norm(estimate-position)
-    est_distance_msg=gm.PointStamped()
-    est_distance_msg.header.seq=0
-    est_distance_msg.header.stamp = rp.Time.now()
-    est_distance_msg.point.x=initial_est_dist
-    est_distance_msg.point.y=0
-    est_distance_msg.point.z=0
-    est_distance_pub.publish(est_distance_msg)
     RATE.sleep()
-while not rp.is_shutdown() and not stop:
+
+
+while not rp.is_shutdown():
     LOCK.acquire()
-    if stop_publish:
-    #    rp.signal_shutdown("agent estimate removed")
-         stop=stop_publish
-
-    #Estimate algorithm
-
-
-    rp.logwarn(truemeasure)
-#    truemeasure=False
-
+#    if stop_publish:
+#    #    rp.signal_shutdown("agent estimate removed")
+#         stop=stop_publish
     if truemeasure:
-    	estimate = (np.outer(bearing_measurement,bearing_measurement).dot(estimate-position))+position
-        rp.logwarn("yuug")
-#    elif not truemeasure:
-#        d_estimate=-estimate_gain*(np.eye(2)-np.outer(bearing_measurement,bearing_measurement)).dot(estimate-position)
-#        estimate= estimate+d_estimate*TIME_STEP
+        estimate = desired_dist*bearing_measurement+position
+        truemeasure=False
 
     # Error norm 
     error=np.linalg.norm(TARGET_POSITION-estimate)
+
     # Estimate distance
     est_dist= np.linalg.norm(estimate-position)
+
     #Error norm publishing
     error_msg=gm.PointStamped()
     error_msg.header.seq=0
@@ -153,7 +139,8 @@ while not rp.is_shutdown() and not stop:
     error_msg.point.x=error
     error_msg.point.y=0
     error_msg.point.z=0
-    error_pub.publish(error_msg)  
+    error_pub.publish(error_msg)
+
     #Estimated Distance publishing
     est_distance_msg=gm.PointStamped()
     est_distance_msg.header.seq=0
@@ -161,9 +148,12 @@ while not rp.is_shutdown() and not stop:
     est_distance_msg.point.x=est_dist
     est_distance_msg.point.y=0
     est_distance_msg.point.z=0
-    LOCK.release()  
+
     #Estimated distance publishing
     est_distance_pub.publish(est_distance_msg)
+
     #Estimate publishing
     estimate_pub.publish(gms.Point(x=estimate[0], y=estimate[1]))
+
+    LOCK.release()
     RATE.sleep()

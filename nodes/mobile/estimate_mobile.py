@@ -22,8 +22,6 @@ LOCK=thd.Lock();
 stop=False
 stop_publish=False
 
-delay=rp.get_param('delay')
-rp.sleep(delay)
 rp.init_node('estimate')
 
 FREQUENCY = 15e1

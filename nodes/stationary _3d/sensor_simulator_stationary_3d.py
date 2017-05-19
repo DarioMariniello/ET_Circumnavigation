@@ -1,25 +1,30 @@
 #! /usr/bin/python
 
 import rospy as rp
-import geomtwo.msg as gms
 import std_msgs.msg as sms
 import threading as thd
+import math as mt
 import numpy as np
 import geometry_msgs.msg as gm
 import ET_circumnavigation.srv as dns
 
 #Parameters
 k_d= rp.get_param('k_d')
+k_fi= rp.get_param('k_fi')
 estimate_gain= rp.get_param('estimate_gain')
 desired_distance= rp.get_param('desired_distance')
+alpha=rp.get_param('alpha')
 
 delay=rp.get_param('delay')
 rp.sleep(delay)
 rp.init_node('sensor_simulator')
 
-position = None
+position=None
 estimate=None
 est_distance=None
+xy_est_distance=None
+
+rate=1.0
 
 TARGET_POSITION=np.array(rp.get_param("target_position"))
 stop_publish=False
@@ -44,22 +49,22 @@ rp.Service('RemoveSensor', dns.RemoveAgent, remove_sensor_handler)
 def position_callback(msg):
     global position
     LOCK.acquire()
-    position = np.array([msg.x, msg.y])
+    position = np.array([msg.x, msg.y, msg.z])
     LOCK.release()
 rp.Subscriber(
     name='position',
-    data_class=gms.Point,
+    data_class=gm.Point,
     callback=position_callback,
     queue_size=10)
 #Estimate 
 def estimate_callback(msg):
     global estimate
     LOCK.acquire()
-    estimate = np.array([msg.x, msg.y])
+    estimate = np.array([msg.x, msg.y, msg.z])
     LOCK.release()
 rp.Subscriber(
     name='estimate',
-    data_class=gms.Point,
+    data_class=gm.Point,
     callback=estimate_callback,
     queue_size=10)
 #Estimated distance
@@ -67,6 +72,7 @@ def est_distance_callback(msg):
     global est_distance
     LOCK.acquire()
     est_distance = msg.point.x
+    xy_est_distance = msg.point.y
     LOCK.release()
 rp.Subscriber(
     name='est_distance',
@@ -75,12 +81,14 @@ rp.Subscriber(
     queue_size=10)
 
 
-RATE = rp.Rate(1.0)
+rate=(4*alpha*k_fi)/mt.pi ################################################## TODO change??
+rp.logwarn(rate)
+RATE = rp.Rate(rate)
 start = False
 #Publishers
 bearing_pub = rp.Publisher(
     name='bearing_measurement',
-    data_class=gms.Vector,
+    data_class=gm.Vector3,
     queue_size=10)
 distance_pub = rp.Publisher(
     name='distance',
@@ -111,6 +119,7 @@ while not rp.is_shutdown():
 
 #   rp.logwarn(bearing)
     distance=np.linalg.norm(TARGET_POSITION-position)
+    xy_distance=np.linalg.norm(np.array([TARGET_POSITION[0],TARGET_POSITION[1], 0.0])-np.array([position[0], position[1], 0.0]))
 #    rp.logwarn(est_distance)
 #    rp.logwarn(distance)
 #    if est_distance > (desired_distance/5) and distance<est_distance :
@@ -128,11 +137,11 @@ while not rp.is_shutdown():
     distance_msg.header.seq=0
     distance_msg.header.stamp = rp.Time.now()
     distance_msg.point.x=distance
-    distance_msg.point.y=0
+    distance_msg.point.y=xy_distance
     distance_msg.point.z=0
     distance_pub.publish(distance_msg)
     #Bearing vector publishing
-    bearing_msg = gms.Vector(*bearing)
+    bearing_msg = gm.Vector3(*bearing)
     bearing_pub.publish(bearing_msg)
     #Truemeasure publishing
     truemeasure_msg=sms.Bool(truemeasure)

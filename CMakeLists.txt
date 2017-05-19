@@ -56,6 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
    FILES
    AddAgent.srv
    RemoveAgent.srv
+   Circum.srv
  )
 
 ## Generate actions in the 'action' folder

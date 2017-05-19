@@ -1,0 +1,73 @@
+<launch>
+
+
+  <rosparam command='load' file='$(find ET_circumnavigation)/param/target_3d.yaml'/>
+
+  
+  
+  <group ns='agent1'>
+
+
+    <param name='rate' type='double' value='250.0'/>
+
+    <rosparam param='node_name'>
+      'agent1'
+    </rosparam>
+
+    <param name='delay' type='double' value='2.0'/>
+
+    <rosparam param='initial_position'>
+      [-4, -4, 0]
+    </rosparam>
+
+    <rosparam param='initial_estimate'>
+      [-3, -3, 0.5]
+    </rosparam>
+
+    <rosparam command='load' file='$(find ET_circumnavigation)/param/target_3d.yaml'/>
+    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_stationary_3d.yaml'/>
+
+    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_stationary_3d.yaml'/>
+  
+
+    <node name='vehicle_simulator'
+      pkg='ET_circumnavigation'
+      type='vehicle_simulator_3d.py'/>
+
+    <node name='planner'
+      pkg='ET_circumnavigation'
+      type='planner_3d.py'
+      output='screen'/>
+
+    <node name='estimate_stationary'
+      pkg='ET_circumnavigation'
+      type='estimate_stationary_3d.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='ET_circumnavigation'
+      type='sensor_simulator_stationary_3d.py'/>
+
+  </group>
+
+
+  
+
+    <param name='delay' type='double' value='1000.0'/>
+    
+
+
+    <param name='rate' type='double' value='250.0'/>
+    
+    <rosparam command='load' file='$(find ET_circumnavigation)/param/plotter_stationary_3d.yaml'/>
+
+    <node name='cloud_add_remove'
+     pkg='ET_circumnavigation'
+      type='cloud_add_remove.py'
+      output='screen'/>
+
+    <node name='plotter_stationary'
+      pkg='ET_circumnavigation'
+      type='plotter_stationary_3d.py'/>
+
+</launch>

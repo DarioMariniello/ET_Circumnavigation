@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 import rospy as rp
-import geomtwo.msg as gms
+
 import std_msgs.msg as sms
 import threading as thd
 import numpy as np
@@ -14,10 +14,14 @@ estimate_gain=rp.get_param('estimate_gain') #from the .yaml file
 #Initial estimate
 estimate=np.array(rp.get_param('initial_estimate')) #from the .launch file
 position=np.array(rp.get_param('initial_position'))
-d_estimate=None
+desired_dist=rp.get_param('desired_distance')
 bearing_measurement=None
 initial_est_dist=None
+initiale_xy_est_dist=None
 truemeasure=None
+est_distance=None
+xy_est_distance=None
+
 TARGET_POSITION=np.array(rp.get_param('target_position'))
 #Lock
 LOCK=thd.Lock();
@@ -38,7 +42,7 @@ TIME_STEP = 1.0/FREQUENCY #Integration step
 
 # Handler for the service "RemoveSensor"
 def remove_estimate_handler(req):
-    global stop_publish   
+    global stop_publish
     LOCK.acquire()
     stop_publish=True
     LOCK.release()
@@ -54,22 +58,22 @@ rp.Service('RemoveEstimate', dns.RemoveAgent, remove_estimate_handler)
 def position_callback(msg):
     global position
     LOCK.acquire()
-    position = np.array([msg.x, msg.y])
+    position = np.array([msg.x, msg.y, msg.z])
     LOCK.release()
 rp.Subscriber(
     name='position',
-    data_class=gms.Point,
+    data_class=gm.Point,
     callback=position_callback,
     queue_size=10)
     
 def bearing_measurement_callback(msg):
     global bearing_measurement
     LOCK.acquire()
-    bearing_measurement = np.array([msg.x, msg.y])
+    bearing_measurement = np.array([msg.x, msg.y, msg.z])
     LOCK.release()
 rp.Subscriber(
     name='bearing_measurement',
-    data_class=gms.Vector,
+    data_class=gm.Vector3,
     callback=bearing_measurement_callback,
     queue_size=10)
 
@@ -86,10 +90,12 @@ rp.Subscriber(
 
 
 
-#Publisher
+##########Publisher
+
+#Estimate
 estimate_pub = rp.Publisher(
     name='estimate',
-    data_class=gms.Point,
+    data_class=gm.Point,
     queue_size=10)
 
 #Estimated distance
@@ -104,7 +110,7 @@ error_pub = rp.Publisher(
     data_class=gm.PointStamped,
     queue_size=10)
 
-start = False
+start = False 
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
     if all([not data is None for data in [position, bearing_measurement,truemeasure]]):
@@ -113,13 +119,14 @@ while not rp.is_shutdown() and not start:
         #rp.logwarn('waiting for position and measurements')
     LOCK.release()
     #Initial estimate and est_distance publishing
-    estimate_pub.publish(gms.Point(x=estimate[0], y=estimate[1]))
+    estimate_pub.publish(gm.Vector3(x=estimate[0], y=estimate[1], z=estimate[2]))
     initial_est_dist=np.linalg.norm(estimate-position)
+    initiale_xy_est_dist=np.linalg.norm(np.array([estimate[0],estimate[1], 0.0])-np.array([position[0], position[1], 0.0]))
     est_distance_msg=gm.PointStamped()
     est_distance_msg.header.seq=0
     est_distance_msg.header.stamp = rp.Time.now()
     est_distance_msg.point.x=initial_est_dist
-    est_distance_msg.point.y=0
+    est_distance_msg.point.y=initiale_xy_est_dist
     est_distance_msg.point.z=0
     est_distance_pub.publish(est_distance_msg)
     RATE.sleep()
@@ -132,20 +139,22 @@ while not rp.is_shutdown() and not stop:
     #Estimate algorithm
 
 
-    rp.logwarn(truemeasure)
+#    rp.logwarn(truemeasure)
 #    truemeasure=False
-
+    est_distance= np.linalg.norm(estimate-position)
+    xy_est_distance=np.linalg.norm(np.array([estimate[0],estimate[1], 0.0])-np.array([position[0], position[1], 0.0]))
     if truemeasure:
-    	estimate = (np.outer(bearing_measurement,bearing_measurement).dot(estimate-position))+position
-        rp.logwarn("yuug")
-#    elif not truemeasure:
-#        d_estimate=-estimate_gain*(np.eye(2)-np.outer(bearing_measurement,bearing_measurement)).dot(estimate-position)
-#        estimate= estimate+d_estimate*TIME_STEP
+    	#estimate = (np.outer(bearing_measurement,bearing_measurement).dot(estimate-position))+position
+        estimate = desired_dist*bearing_measurement+position
+#        rp.logwarn("ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt")
+#        rp.logwarn(bearing_measurement)
+        truemeasure=False
 
     # Error norm 
     error=np.linalg.norm(TARGET_POSITION-estimate)
     # Estimate distance
     est_dist= np.linalg.norm(estimate-position)
+    xy_est_distance=np.linalg.norm(np.array([estimate[0],estimate[1], 0.0])-np.array([position[0], position[1], 0.0]))
     #Error norm publishing
     error_msg=gm.PointStamped()
     error_msg.header.seq=0
@@ -159,11 +168,11 @@ while not rp.is_shutdown() and not stop:
     est_distance_msg.header.seq=0
     est_distance_msg.header.stamp = rp.Time.now()
     est_distance_msg.point.x=est_dist
-    est_distance_msg.point.y=0
+    est_distance_msg.point.y=xy_est_distance
     est_distance_msg.point.z=0
     LOCK.release()  
     #Estimated distance publishing
     est_distance_pub.publish(est_distance_msg)
     #Estimate publishing
-    estimate_pub.publish(gms.Point(x=estimate[0], y=estimate[1]))
+    estimate_pub.publish(gm.Point(x=estimate[0], y=estimate[1], z=estimate[2]))
     RATE.sleep()

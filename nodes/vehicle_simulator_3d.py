@@ -1,7 +1,7 @@
 #! /usr/bin/python
 
 import rospy as rp
-import geomtwo.msg as gms
+import geometry_msgs.msg as gm
 
 import threading as thd
 
@@ -16,11 +16,11 @@ position = np.array(rp.get_param('initial_position'))
 #Velocity
 velocity = None
 
-#stop=False
-#stop_publish=False
+stop=False
+stop_publish=False
 
-# delay=rp.get_param('delay')
-# rp.sleep(delay)
+delay=rp.get_param('delay')
+rp.sleep(delay)
 rp.init_node('integrator')
 
 FREQUENCY = 15e1
@@ -28,30 +28,30 @@ RATE = rp.Rate(FREQUENCY)
 TIME_STEP = 1.0/FREQUENCY
 
 
-# Handler for the service "RemoveVehicle"
-# def remove_vehicle_handler(req):   
-#     global stop_publish
-#     LOCK.acquire()
-#     stop_publish=True
-#     LOCK.release()
-#     return dns.RemoveAgentResponse()
+# Handler for the service "RemoveSensor"
+def remove_vehicle_handler(req):   
+    global stop_publish
+    LOCK.acquire()
+    stop_publish=True
+    LOCK.release()
+    return dns.RemoveAgentResponse()
 
-# rp.Service('RemoveVehicle', dns.RemoveAgent, remove_vehicle_handler)
+rp.Service('RemoveVehicle', dns.RemoveAgent, remove_vehicle_handler)
 
 
 #Publisher
-pub = rp.Publisher('position', gms.Point, queue_size=10)
+pub = rp.Publisher('position', gm.Point, queue_size=10)
 
 
 #Subscriber
 def cmdvel_callback(msg):
     global velocity
     LOCK.acquire()
-    velocity = np.array([msg.x, msg.y])
+    velocity = np.array([msg.x, msg.y, msg.z])
     LOCK.release()
 rp.Subscriber(
     name='cmdvel',
-    data_class=gms.Vector,
+    data_class=gm.Vector3,
     callback=cmdvel_callback,
     queue_size=10)
 
@@ -65,16 +65,16 @@ while not rp.is_shutdown() and not start:
         #rp.logwarn('waiting for cmdvel')
     LOCK.release()
     #Initial position publishing
-    pub.publish(gms.Point(x=position[0], y=position[1]))
+    pub.publish(gm.Point(x=position[0], y=position[1], z=position[2]))
     RATE.sleep()
 while not rp.is_shutdown():
     LOCK.acquire()
-    # if stop_publish:
-    #     rp.signal_shutdown("agent vehicle removed")
+    if stop_publish:
+        rp.signal_shutdown("agent vehicle removed")
     #Integration
     position = position+velocity*TIME_STEP
     #rp.logwarn(position)
     LOCK.release()
     #Position publishing
-    pub.publish(gms.Point(x=position[0], y=position[1]))
+    pub.publish(gm.Point(x=position[0], y=position[1], z=position[2]))
     RATE.sleep()
