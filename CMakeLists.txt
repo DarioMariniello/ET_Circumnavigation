@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(ET_circumnavigation)
+project(et_circumnavigation)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -57,6 +57,7 @@ find_package(catkin REQUIRED COMPONENTS
    AddAgent.srv
    RemoveAgent.srv
    Circum.srv
+   Topology.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -103,7 +104,7 @@ generate_messages(
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
 #  INCLUDE_DIRS include
-#  LIBRARIES ET_circumnavigation
+#  LIBRARIES et_circumnavigation
 #  CATKIN_DEPENDS roscpp rospy std_msgs
 #  DEPENDS system_lib
 )
@@ -120,24 +121,24 @@ include_directories(
 )
 
 ## Declare a C++ library
-# add_library(ET_circumnavigation
-#   src/${PROJECT_NAME}/ET_circumnavigation.cpp
+# add_library(et_circumnavigation
+#   src/${PROJECT_NAME}/et_circumnavigation.cpp
 # )
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
-# add_dependencies(ET_circumnavigation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(et_circumnavigation ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-# add_executable(ET_circumnavigation_node src/ET_circumnavigation_node.cpp)
+# add_executable(et_circumnavigation_node src/et_circumnavigation_node.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(ET_circumnavigation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# add_dependencies(et_circumnavigation_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(ET_circumnavigation_node
+# target_link_libraries(et_circumnavigation_node
 #   ${catkin_LIBRARIES}
 # )
 
@@ -156,7 +157,7 @@ include_directories(
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS ET_circumnavigation ET_circumnavigation_node
+# install(TARGETS et_circumnavigation et_circumnavigation_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -181,7 +182,7 @@ include_directories(
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_ET_circumnavigation.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_et_circumnavigation.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

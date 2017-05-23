@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.transforms import Affine2D
 import mpl_toolkits.axisartist.floating_axes as floating_axes
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 rp.init_node('plotter')
 
 

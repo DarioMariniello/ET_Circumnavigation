@@ -7,7 +7,7 @@ import threading as thd
 import math as mt
 import numpy as np
 import geometry_msgs.msg as gm
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 #Parameters
 k_d= rp.get_param('k_d')
@@ -24,7 +24,8 @@ estimate=None
 est_distance=None
 curr_bearing=[(1,1)]
 
-
+global true_request
+true_request=False
 
 #stop_publish=False
 #stop=False
@@ -34,15 +35,15 @@ LOCK = thd.Lock()
 #rp.sleep(delay)
 rp.init_node('sensor_simulator')
 
-# Handler for the service "RemoveSensor"
-# def remove_sensor_handler(req):   
-#     global stop_publish
-#     LOCK.acquire()
-#     stop_publish=True
-#     LOCK.release()
-#     return dns.RemoveAgentResponse()
+# Handler for the service "TrueRequest"
+def true_request_handler(req):   
+    global true_request
+    LOCK.acquire()
+    true_request=True
+    LOCK.release()
+    return dns.TopologyResponse()
 
-# rp.Service('RemoveSensor', dns.RemoveAgent, remove_sensor_handler)
+rp.Service('TrueRequest', dns.Topology, true_request_handler)
 
 
 
@@ -106,6 +107,8 @@ truemeasure_pub= rp.Publisher(
     data_class=sms.Bool,
     queue_size=10)
 
+
+
 start = False
 
 while not rp.is_shutdown() and not start:
@@ -146,15 +149,17 @@ while not rp.is_shutdown():
     LOCK.acquire()
 #    if stop_publish:
 #    	rp.signal_shutdown("agent sensor removed")
-    
 
     #SELF-TRIGGERING MECHANISM
     distance=np.linalg.norm(TARGET_POSITION-position)
     est_bearing= (estimate-position)/np.linalg.norm(estimate-position)
-    if np.dot(curr_bearing,est_bearing)<0.05 :
+    if np.dot(curr_bearing,est_bearing)<0.05 or true_request:
         bearing = (TARGET_POSITION-position)/np.linalg.norm(TARGET_POSITION-position)
-        curr_bearing=bearing
-        truemeasure=True
+        if not true_request:
+            truemeasure=True
+            curr_bearing=bearing
+        else:
+            true_request=False
     else:
         bearing=est_bearing
         truemeasure=False

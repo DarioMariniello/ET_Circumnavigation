@@ -7,7 +7,7 @@ import threading as thd
 import numpy as np
 import math
 import copy as cp
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 import geometry_msgs.msg as gm
 
 # Parameters
@@ -17,13 +17,18 @@ k_fi= rp.get_param('k_fi')
 k_d= rp.get_param('k_d')
 estimate_gain= rp.get_param('estimate_gain')
 node_name=rp.get_param('node_name')
-#delay=rp.get_param('delay')
+delay=rp.get_param('delay')
 
 # Variables
-position = None
-estimate = None
 est_distance=0.0
 bearing_measurement = None
+
+
+agents_number=0
+
+neighbor=None
+
+agent_beta=0.0
 
 
 LOCK = thd.Lock()
@@ -31,7 +36,7 @@ LOCK = thd.Lock()
 #stop_publish=False
 
 
-rp.sleep(1)
+rp.sleep(delay)
 rp.init_node('planner') 
 
 
@@ -93,7 +98,7 @@ def add_agent_handler(req):
         data_class=sms.Bool,
         callback=agent_callback_t,
         callback_args=req.name,
-        queue_size=1)   
+        queue_size=1)
 
     LOCK.acquire()
     agent_names.append(req.name)
@@ -103,6 +108,7 @@ def add_agent_handler(req):
     return dns.AddAgentResponse()
 
 rp.Service('AddAgent', dns.AddAgent, add_agent_handler)
+
 
 # Handler for the service "RemoveAgent"
 # def remove_agent_handler(req):   
@@ -123,6 +129,10 @@ rp.wait_for_service('/AddMe')
 add_me_proxy=rp.ServiceProxy('/AddMe', dns.AddAgent)
 add_me_proxy.call(node_name)
 
+# rp.wait_for_service('/Topology')
+# topology_proxy=rp.ServiceProxy('/Topology', dns.Topology)
+# topology_proxy.call(node_name)
+
 
 # Handler for the service "RemovePlanner"
 # def remove_planner_handler(req):
@@ -135,16 +145,16 @@ add_me_proxy.call(node_name)
 # rp.Service('RemovePlanner', dns.RemoveAgent, remove_planner_handler)
 
 #Subscribers
-def position_callback(msg):
-    global position
-    LOCK.acquire()
-    position = np.array([msg.x, msg.y])
-    LOCK.release()
-rp.Subscriber(
-    name='position',
-    data_class=gms.Point,
-    callback=position_callback,
-    queue_size=10)
+# def position_callback(msg):
+#     global position
+#     LOCK.acquire()
+#     position = np.array([msg.x, msg.y])
+#     LOCK.release()
+# rp.Subscriber(
+#     name='position',
+#     data_class=gms.Point,
+#     callback=position_callback,
+#     queue_size=10)
 
 def bearing_measurement_callback(msg):
     global bearing_measurement
@@ -157,16 +167,16 @@ rp.Subscriber(
     callback=bearing_measurement_callback,
     queue_size=10)
 
-def estimate_callback(msg):
-    global estimate
-    LOCK.acquire()
-    estimate = np.array([msg.x, msg.y])
-    LOCK.release()
-rp.Subscriber(
-    name='estimate',
-    data_class=gms.Point,
-    callback=estimate_callback,
-    queue_size=10)
+# def estimate_callback(msg):
+#     global estimate
+#     LOCK.acquire()
+#     estimate = np.array([msg.x, msg.y])
+#     LOCK.release()
+# rp.Subscriber(
+#     name='estimate',
+#     data_class=gms.Point,
+#     callback=estimate_callback,
+#     queue_size=10)
 
 def est_distance_callback(msg):
     global est_distance
@@ -199,60 +209,84 @@ beta_pub = rp.Publisher(
 start = False
 RATE = rp.Rate(150.0)
 STEP=1.0/150.0
-global neighbor
-neighbor=None
-global agent_beta
-agent_beta=100
-global beta
-beta=0
+#global count
+#count=0
+go=False
 
-while not rp.is_shutdown() and not start and neighbor is None:
+
+while not rp.is_shutdown() and not start:
     LOCK.acquire()
-    if all([not data is None for data in [position, estimate, bearing_measurement,est_distance]]):
+    if all([not data is None for data in [bearing_measurement,est_distance]]) :
         print(node_name+" sees ",agent_names," at the BEGINNNNNNNNNNNNNNNNG")
-        buff_beta=0.0
-        for name in agent_names:
-            if all([not data is None for data in [agent_bearing_measurement[name],agent_truemeasure[name]]]):
-                if agent_truemeasure[name]:
-                    buff_beta=Angle(bearing_measurement,agent_bearing_measurement[name])
-                    if buff_beta<agent_beta:
-                        agent_beta=buff_beta
-                        neighbor=name
         start = True
-#        print(agent_truemeasure[name],agent_bearing_measurement[name])
     LOCK.release()
     RATE.sleep()
 
-while not rp.is_shutdown() and not neighbor is None:
+while not rp.is_shutdown() :
     LOCK.acquire()
-    # if stop_publish:
-    # 	rp.signal_shutdown("agent planner removed")
- 
-    phi_bar=np.array([bearing_measurement[1],-bearing_measurement[0]])
-#    print(node_name+" sees ",agent_names)
-    #Number of other agents in the network
-    
-    
-    #Counterclockwise angle
-    for name in agent_names:
-        if  agent_bearing_measurement[name] is None or agent_truemeasure[name] is None:
-            start=False
-        else:
-            if agent_truemeasure[neighbor]:
-                beta=Angle(bearing_measurement,agent_bearing_measurement[neighbor])
-            else :
-                beta=beta+STEP*k_fi*(alpha+2*math.pi/(len(agent_names)+1))
-    print (node_name+" neighbor is "+neighbor)
 
-    vel = k_d*bearing_measurement*(est_distance-DESIRED_DISTANCE)+k_fi*est_distance*phi_bar*(alpha+beta)
+
+    phi_bar=np.array([bearing_measurement[1],-bearing_measurement[0]])
+    
+
+
+    if neighbor is None and not len(agent_names)==0:
+        buff_beta=0.0
+        agent_beta=1000
+        rp.logwarn("????????????????????????????????????????????????????????? per %s",node_name)
+        for name in agent_names:
+#            rp.logwarn("%s controlla %s",node_name,name)
+            while not go:
+#                rp.logwarn(agent_bearing_measurement[name])
+                if not agent_bearing_measurement[name] is None :
+                    rp.wait_for_service('/Topology')
+                    topology_proxy=rp.ServiceProxy('/Topology', dns.Topology)
+                    topology_proxy.call(node_name)
+                    buff_beta=Angle(bearing_measurement,agent_bearing_measurement[name])
+#                   rp.logwarn("%s vede con %s questo: %s",node_name,name,buff_beta)
+                    if buff_beta<agent_beta:
+                        agent_beta=buff_beta
+                        neighbor=name
+#                    rp.logwarn(agent_bearing_measurement[name])
+#                    rp.logwarn(agent_truemeasure[name])
+                    go=True
+                else:
+                    go=False
+#                    rp.logwarn("%s got stuck!!!!!!",node_name)
+            go=False
+        agents_number=len(agent_names)
+        rp.logwarn("11111111111111111111111111111111111111111111111111111111111 per %s",node_name)
+#        rp.logwarn("Il neighbor di %s e' %s",node_name,neighbor)
+
+    elif not neighbor is None and not agents_number==len(agent_names):
+        neighbor=None
+        agents_number=len(agent_names)
+        rp.logwarn("222222222222222222222222222222222222222222222222222222222222 per %s",node_name)
+
+    elif not neighbor is None and agents_number==len(agent_names):
+#        rp.logwarn("333333333333333333333333333333333333333333333333333333333333333333 per %s",node_name)
+        if agent_truemeasure[neighbor]:
+            agent_beta=Angle(bearing_measurement,agent_bearing_measurement[neighbor])
+        else :
+            agent_beta=agent_beta+STEP*k_fi*(alpha+2*math.pi/(agents_number+1))
+
+
+#    rp.logwarn(agent_beta)
+#    rp.logwarn("Il neighbor di %s e' %s",node_name,neighbor)
+#    rp.logwarn(len(agent_names))
+    vel = k_d*bearing_measurement*(est_distance-DESIRED_DISTANCE)+k_fi*est_distance*phi_bar*(alpha+agent_beta)
     #Velocity message:  approach therm could be removed but helps arc trajectories following
+
+#    if count<5:
+#        vel=(0.0,0.0)
+#        count=count+1
 
     cmdvel_msg = gms.Vector(x=vel[0], y=vel[1])
     #Beta message
     beta_msg=gm.PointStamped()
     beta_msg.header.seq=0
     beta_msg.header.stamp = rp.Time.now()
-    beta_msg.point.x=beta
+    beta_msg.point.x=agent_beta
     beta_msg.point.y=0
     beta_msg.point.z=0
     LOCK.release()

@@ -7,7 +7,7 @@ import geomtwo.msg as gms
 import math as mt
 import time
 import threading as thd
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 import numpy as np
 
 circum=False

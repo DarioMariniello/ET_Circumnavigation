@@ -1,6 +1,6 @@
 <launch>
   
-  <rosparam command='load' file='$(find ET_circumnavigation)/param/target.yaml'/>
+  <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
 
   <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
   </include>
@@ -28,29 +28,29 @@
       [-0.5 ,-0.5 ,1.1]
     </rosparam>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/target.yaml'/>
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
   
 
     <node name='bridge'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='bridge.py'
       output='screen'/>
 
     <node name='planner'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='planner.py'
       output='screen'/>
 
     <node name='estimate_stationary'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='estimate_stationary.py'
       output='screen'/>
 
     <node name='sensor_simulator_stationary'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
   </group>
@@ -62,22 +62,22 @@
     <param name='agent_to_remove' type='str' value='agent2'/>
     
     <node name='remove_agent_2'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='remove_agent.py'
       output='screen'/>
 
 
     <node name='cloud_add_remove'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='cloud_add_remove.py'
       output='screen'/>
 
     <param name='rate' type='double' value='250.0'/>
     
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/plotter_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
 
     <node name='plotter_stationary'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='plotter_stationary.py'/>
 
 

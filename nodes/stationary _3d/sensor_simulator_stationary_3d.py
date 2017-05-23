@@ -6,7 +6,7 @@ import threading as thd
 import math as mt
 import numpy as np
 import geometry_msgs.msg as gm
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 #Parameters
 k_d= rp.get_param('k_d')

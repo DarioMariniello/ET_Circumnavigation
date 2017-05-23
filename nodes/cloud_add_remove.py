@@ -7,15 +7,16 @@ import threading as thd
 import numpy as np
 import math
 import copy as cp
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 agent_names=[]
 add_agent_proxies={}
-remove_agent_proxies={}
-remove_sensor_proxies={}
-remove_estimate_proxies={}
-remove_vehicle_proxies={}
-remove_planner_proxies={}
+# remove_agent_proxies={}
+# remove_sensor_proxies={}
+# remove_estimate_proxies={}
+# remove_vehicle_proxies={}
+# remove_planner_proxies={}
+true_request_proxies={}
 
 LOCK=thd.Lock()
 
@@ -27,12 +28,13 @@ plotter_proxy=rp.ServiceProxy('AddAgentArtist',dns.AddAgent)
 # add_agent_proxies, calls the service "AddAgent" for all the agents in the list agent_name, to notify them of the enter ot the new one,
 # and calls the service "AddAgent" to the new one, to notify it of the existence of the others in the network.
 # Furthermore, the Cloud notifies the plotter for the enter of the new agent.
+###ADDED: also every agent calls truemeasure request to the whole network, in order calculate topology
 def add_me_handler(req):
     LOCK.acquire()
     add_agent_proxies[req.name]=rp.ServiceProxy(req.name+'/AddAgent',dns.AddAgent)     
+    true_request_proxies[req.name]=rp.ServiceProxy(req.name+'/TrueRequest',dns.Topology)
     # remove_agent_proxies[req.name]=rp.ServiceProxy(req.name+'/RemoveAgent',dns.RemoveAgent)
     # remove_sensor_proxies[req.name]=rp.ServiceProxy(req.name+'/RemoveSensor',dns.RemoveAgent)
-    # remove_estimate_proxies[req.name]=rp.ServiceProxy(req.name+'/RemoveEstimate',dns.RemoveAgent)
     # remove_vehicle_proxies[req.name]=rp.ServiceProxy(req.name+'/RemoveVehicle',dns.RemoveAgent)
     # remove_planner_proxies[req.name]=rp.ServiceProxy(req.name+'/RemovePlanner',dns.RemoveAgent)
     for name in agent_names:
@@ -41,31 +43,30 @@ def add_me_handler(req):
     agent_names.append(req.name)
     LOCK.release()
     plotter_proxy.call(req.name)
-    return dns.AddAgentResponse()   
+    return dns.AddAgentResponse()
 
 rp.Service('AddMe',dns.AddAgent,add_me_handler)
 
-# Handle for the service "Remove"
-# def remove_handler(req):
-#     LOCK.acquire()
-#     agent_names.remove(req.name)
-#     del add_agent_proxies[req.name]
-#     for name in agent_names:
-#         remove_agent_proxies[name].call(req.name)
+
+# Handle for the service "Topology"
+def topology_handler(req):
+    LOCK.acquire()
+    for name in agent_names:
+        true_request_proxies[name].call(req.name)
 #     plotter_proxy_remove.call(req.name)
 #     del remove_agent_proxies[req.name]
 #     remove_planner_proxies[req.name].call(req.name)
 #     remove_sensor_proxies[req.name].call(req.name)
-#     remove_estimate_proxies[req.name].call(req.name)
+    true_request_proxies[req.name].call(req.name)
 #     remove_vehicle_proxies[req.name].call(req.name)
 #     del remove_planner_proxies[req.name]
 #     del remove_sensor_proxies[req.name]
 #     del remove_vehicle_proxies[req.name]
 #     del remove_estimate_proxies[req.name]
-#     LOCK.release()
-#     return dns.RemoveAgentResponse()   
+    LOCK.release()
+    return dns.TopologyResponse()   
 
-# rp.Service('Remove',dns.RemoveAgent,remove_handler)
+rp.Service('Topology',dns.Topology,topology_handler)
 
 rp.init_node('cloud_add_remove')
 rp.spin()

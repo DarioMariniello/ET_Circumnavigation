@@ -9,7 +9,7 @@ import copy as cp
 import numpy as np
 import matplotlib.pyplot as plt
 
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 rp.init_node('plotter')
 
 

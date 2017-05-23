@@ -7,7 +7,7 @@ import threading as thd
 
 import numpy as np
 
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 
 LOCK = thd.Lock()

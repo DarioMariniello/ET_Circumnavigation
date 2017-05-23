@@ -16,27 +16,27 @@
       [0.8, 1.2]
     </rosparam>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_mobile.yaml'/>
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_mobile.yaml'/>
 
     <remap from='target_position' to='/target/target_position'/>
   
 
     <node name='vehicle_simulator'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='vehicle_simulator.py'/>
 
     <node name='planner'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='planner.py'
       output='screen'/>
 
     <node name='estimate_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='estimate_mobile.py'/>
 
     <node name='sensor_simulator_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='sensor_simulator_mobile.py'/>
 
   </group>
@@ -57,26 +57,26 @@
       [0.7, 1.1]
     </rosparam>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_mobile.yaml'/>
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_mobile.yaml'/>
 
     <remap from='target_position' to='/target/target_position'/>
   
 
     <node name='vehicle_simulator'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='vehicle_simulator.py'/>
 
     <node name='planner'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='planner.py'/>
 
     <node name='estimate_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='estimate_mobile.py'/>
 
     <node name='sensor_simulator_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='sensor_simulator_mobile.py'/>
 
   </group>
@@ -97,27 +97,27 @@
       [0.6, 1.0]
     </rosparam>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_mobile.yaml'/>
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_mobile.yaml'/>
   
 
     <remap from='target_position' to='/target/target_position'/>
 
 
     <node name='vehicle_simulator'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='vehicle_simulator.py'/>
 
     <node name='planner'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='planner.py'/>
 
     <node name='estimate_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='estimate_mobile.py'/>
 
     <node name='sensor_simulator_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='sensor_simulator_mobile.py'/>
 
   </group>
@@ -138,25 +138,25 @@
       [0.7, 1.1]
     </rosparam>
 
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/estimate_mobile.yaml'/>
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/planner_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_mobile.yaml'/>
   
     <remap from='target_position' to='/target/target_position'/>
 
     <node name='vehicle_simulator'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='vehicle_simulator.py'/>
 
     <node name='planner'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='planner.py'/>
 
     <node name='estimate_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='estimate_mobile.py'/>
 
     <node name='sensor_simulator_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='sensor_simulator_mobile.py'/>
 
   </group>
@@ -170,7 +170,7 @@
     </rosparam>
 
      <node name='target'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='target.py'/>
 
   </group>
@@ -180,13 +180,13 @@
     <param name='agent_to_remove' type='str' value='agent2'/>
     
     <node name='remove_agent'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='remove_agent.py'
       output='screen'/>
 
 
     <node name='cloud_add_remove'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='cloud_add_remove.py'
       output='screen'/>
 
@@ -196,10 +196,10 @@
     </rosparam>
     <remap from='target_position' to='/target/target_position'/>
     
-    <rosparam command='load' file='$(find ET_circumnavigation)/param/plotter_mobile.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_mobile.yaml'/>
 
     <node name='plotter_mobile'
-      pkg='ET_circumnavigation'
+      pkg='et_circumnavigation'
       type='plotter_mobile.py'/>
 
 </launch>

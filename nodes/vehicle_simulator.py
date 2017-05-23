@@ -7,7 +7,7 @@ import threading as thd
 
 import numpy as np
 
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 
 LOCK = thd.Lock()
@@ -67,6 +67,7 @@ while not rp.is_shutdown() and not start:
     #Initial position publishing
     pub.publish(gms.Point(x=position[0], y=position[1]))
     RATE.sleep()
+
 while not rp.is_shutdown():
     LOCK.acquire()
     # if stop_publish:

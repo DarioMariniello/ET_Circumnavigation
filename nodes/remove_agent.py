@@ -4,7 +4,7 @@ import rospy as rp
 import geomtwo.msg as gms
 import threading as thd
 import numpy as np
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 
 
 delay=rp.get_param('delay')

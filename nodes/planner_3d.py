@@ -7,7 +7,7 @@ import threading as thd
 import numpy as np
 import math
 import copy as cp
-import ET_circumnavigation.srv as dns
+import et_circumnavigation.srv as dns
 import geometry_msgs.msg as gm
 
 
