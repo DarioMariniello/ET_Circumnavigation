@@ -6,6 +6,7 @@ import std_msgs.msg as sms
 import threading as thd
 import numpy as np
 import geometry_msgs.msg as gm
+import et_circumnavigation.msg as bms
 import et_circumnavigation.srv as dns
 
 
@@ -29,8 +30,8 @@ LOCK=thd.Lock();
 #stop=False
 #stop_publish=False
 
-#delay=rp.get_param('delay')
-#rp.sleep(delay)
+delay=rp.get_param('delay')
+rp.sleep(delay)
 rp.init_node('estimate')
 
 FREQUENCY = 15e1
@@ -65,24 +66,15 @@ rp.Subscriber(
     
 def bearing_measurement_callback(msg):
     global bearing_measurement
+    global truemeasure
     LOCK.acquire()
-    bearing_measurement = np.array([msg.x, msg.y])
+    bearing_measurement = np.array([msg.bearing_measurement.x, msg.bearing_measurement.y])
+    truemeasure=msg.truemeasure
     LOCK.release()
 rp.Subscriber(
     name='bearing_measurement',
-    data_class=gms.Vector,
+    data_class=bms.Bearing,
     callback=bearing_measurement_callback,
-    queue_size=10)
-
-def truemeasure_callback(msg):
-    global truemeasure
-    LOCK.acquire()
-    truemeasure=msg.data 
-    LOCK.release()
-rp.Subscriber(
-    name='truemeasure',
-    data_class=sms.Bool,
-    callback=truemeasure_callback,
     queue_size=10)
 
 
@@ -111,7 +103,7 @@ start = False
 
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
-    if all([not data is None for data in [position, bearing_measurement,truemeasure]]):
+    if all([not data is None for data in [position, bearing_measurement]]):
            start = True
     LOCK.release()
     RATE.sleep()

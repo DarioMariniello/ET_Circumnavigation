@@ -7,6 +7,7 @@ import threading as thd
 import math as mt
 import numpy as np
 import geometry_msgs.msg as gm
+import et_circumnavigation.msg as bms
 import et_circumnavigation.srv as dns
 
 #Parameters
@@ -16,7 +17,7 @@ estimate_gain= rp.get_param('estimate_gain')
 desired_distance= rp.get_param('desired_distance')
 alpha=rp.get_param('alpha')
 TARGET_POSITION=np.array(rp.get_param("target_position"))
-#delay=rp.get_param('delay')
+delay=rp.get_param('delay')
 
 #Variables
 position = None
@@ -32,18 +33,18 @@ true_request=False
 
 LOCK = thd.Lock()
 
-#rp.sleep(delay)
+rp.sleep(delay)
 rp.init_node('sensor_simulator')
 
 # Handler for the service "TrueRequest"
-def true_request_handler(req):   
-    global true_request
-    LOCK.acquire()
-    true_request=True
-    LOCK.release()
-    return dns.TopologyResponse()
+# def true_request_handler(req):   
+#     global true_request
+#     LOCK.acquire()
+#     true_request=True
+#     LOCK.release()
+#     return dns.TopologyResponse()
 
-rp.Service('TrueRequest', dns.Topology, true_request_handler)
+# rp.Service('TrueRequest', dns.Topology, true_request_handler)
 
 
 
@@ -92,7 +93,7 @@ RATE = rp.Rate(150.0)
 #bearing
 bearing_pub = rp.Publisher(
     name='bearing_measurement',
-    data_class=gms.Vector,
+    data_class=bms.Bearing,
     queue_size=10)
 
 #distance
@@ -101,12 +102,8 @@ distance_pub = rp.Publisher(
     data_class=gm.PointStamped,
     queue_size=10)
 
-#truemeasure
-truemeasure_pub= rp.Publisher(
-    name='truemeasure',
-    data_class=sms.Bool,
-    queue_size=10)
-
+rp.wait_for_service('LastBeta')
+last_beta_proxy=rp.ServiceProxy('LastBeta', dns.LastBeta)
 
 
 start = False
@@ -125,6 +122,7 @@ while not rp.is_shutdown() and not start:
     bearing = (TARGET_POSITION-position)/np.linalg.norm(TARGET_POSITION-position)
     curr_bearing=bearing
     truemeasure=True
+    last_beta=-100
     distance=np.linalg.norm(TARGET_POSITION-position)
     #Distance publishing
     distance_msg=gm.PointStamped()
@@ -135,11 +133,10 @@ while not rp.is_shutdown() and not start:
     distance_msg.point.z=0
     distance_pub.publish(distance_msg)
     #Bearing vector publishing
-    bearing_msg = gms.Vector(*bearing)
+    bearing_msg= bms.Bearing()
+    bearing_msg.bearing_measurement = gms.Vector(*bearing)
+    bearing_msg.truemeasure = truemeasure
     bearing_pub.publish(bearing_msg)
-    #Truemeasure publishing
-    truemeasure_msg=sms.Bool(truemeasure)
-    truemeasure_pub.publish(truemeasure_msg)
     if all([not data is None for data in [ estimate,est_distance ]]):
         start = True
     LOCK.release()
@@ -155,13 +152,11 @@ while not rp.is_shutdown():
     est_bearing= (estimate-position)/np.linalg.norm(estimate-position)
     if np.dot(curr_bearing,est_bearing)<0.05 or true_request:
         bearing = (TARGET_POSITION-position)/np.linalg.norm(TARGET_POSITION-position)
-        if not true_request:
-            truemeasure=True
-            curr_bearing=bearing
-        else:
-            true_request=False
+        truemeasure=True
+        last_beta=last_beta_proxy.call().last_beta
+        curr_bearing=bearing
     else:
-        bearing=est_bearing
+        bearing=(estimate-position)/np.linalg.norm(estimate-position)
         truemeasure=False
 
     #Distance publishing
@@ -173,10 +168,10 @@ while not rp.is_shutdown():
     distance_msg.point.z=0
     distance_pub.publish(distance_msg)
     #Bearing vector publishing
-    bearing_msg = gms.Vector(*bearing)
+    bearing_msg= bms.Bearing()
+    bearing_msg.bearing_measurement = gms.Vector(*bearing)
+    bearing_msg.truemeasure = truemeasure
+    bearing_msg.last_beta = last_beta
     bearing_pub.publish(bearing_msg)
-    #Truemeasure publishing
-    truemeasure_msg=sms.Bool(truemeasure)
-    truemeasure_pub.publish(truemeasure_msg)
     LOCK.release()
     RATE.sleep()

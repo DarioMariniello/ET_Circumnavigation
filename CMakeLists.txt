@@ -45,11 +45,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+ add_message_files(
+   FILES
+   Bearing.msg
 #   Message2.msg
-# )
+ )
 
 ## Generate services in the 'srv' folder
  add_service_files(
@@ -57,7 +57,8 @@ find_package(catkin REQUIRED COMPONENTS
    AddAgent.srv
    RemoveAgent.srv
    Circum.srv
-   Topology.srv
+   LastBeta.srv
+   Neighbor.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -71,6 +72,7 @@ find_package(catkin REQUIRED COMPONENTS
 generate_messages(
    DEPENDENCIES
    std_msgs
+   geomtwo
 )
 
 ################################################
@@ -105,7 +107,7 @@ generate_messages(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES et_circumnavigation
-#  CATKIN_DEPENDS roscpp rospy std_msgs
+  CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
 )
 
