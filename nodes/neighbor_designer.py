@@ -3,7 +3,6 @@
 import rospy as rp
 import geomtwo.msg as gms
 import std_msgs.msg as sms
-import et_circumnavigation.msg as bms
 import threading as thd
 import numpy as np
 import math as mt
@@ -12,52 +11,12 @@ import et_circumnavigation.srv as dns
 import geometry_msgs.msg as gm
 
 # Parameters
-DESIRED_DISTANCE = rp.get_param('desired_distance')
-alpha= rp.get_param('alpha')
-k_fi= rp.get_param('k_fi')
-k_d= rp.get_param('k_d')
-c_radius=rp.get_param('communication_radius')
-
-node_name=rp.get_param('node_name')
-delay=rp.get_param('delay')
-
-# Variables
-est_distance=0.0
-bearing_measurement = None
-last_true_bearing = None
-position=None
-
-neighbor=""
-local_neighbor=""
-
-agent_beta=0.0
-
-
+RADIUS = rp.get_param('communication_radius')
 LOCK = thd.Lock()
 
-#stop_publish=False
 
+rp.init_node('neighbor_designer')
 
-rp.sleep(delay)
-rp.init_node('planner') 
-
-
-
-# Counterclockwise_angle function
-# This function returns the counterclockwise angle between two vectors
-def Angle(bearing_measurement,neighbor_bearing_measurement):    
-    phi_i=np.array([bearing_measurement[0],bearing_measurement[1],0.0]) 
-    phi_j=np.array([neighbor_bearing_measurement[0],neighbor_bearing_measurement[1],0.0])
-    n_i=np.linalg.norm(phi_i)
-    n_j=np.linalg.norm(phi_j)
-    sp=np.inner(phi_i,phi_j)
-    vp=np.cross(phi_i,phi_j)
-    cos_beta=sp/(n_i*n_j)
-    sin_beta=vp[2]/(n_i*n_j)
-    beta=mt.atan2(sin_beta,cos_beta)
-    if beta<0:
-        beta=beta+2*mt.pi
-    return beta 
 
 
 # Subscribers to the bearing vectors of the other agents
@@ -85,7 +44,7 @@ def agent_position_callback(msg, name):
 
 bearing_measurement_subscribers={}
 position_subscribers={}
-# Handler for the service "AddAgent": the new agent call "AddAgent" and the others add its name in agent_name and subscribe to its fi 
+# Handler for the service "AddAgent": the new agent call "AddAgent" and the others add its name in agent_name and subscribe to its fi
 def add_agent_handler(req):
     global agent_names
     global agent_bearing_measurement
@@ -94,16 +53,12 @@ def add_agent_handler(req):
         name='/'+req.name+'/bearing_measurement',
         data_class=bms.Bearing,
         callback=agent_bearing_callback,
-        callback_args=req.name,
-        queue_size=1)   
-     
+        callback_args=req.name)
     position_subscribers[req.name]=rp.Subscriber(
         name='/'+req.name+'/position',
         data_class=gms.Point,
         callback=agent_position_callback,
-        callback_args=req.name,
-        queue_size=1)   
-
+        callback_args=req.name)
     LOCK.acquire()
     agent_names.append(req.name)
     agent_bearing_measurement[req.name]=None
@@ -210,7 +165,7 @@ while not rp.is_shutdown() :
                     buff_beta=Angle(bearing_measurement,local_agent_bearing[name])
 
                 else :
-                    if current_y[name]!=0.0 and current_x[name]!=0.0 and local_agent_last_beta[name]>0: 
+                    if current_y[name]!=0.0 and current_x[name]!=0.0 and local_agent_last_beta[name]>0:
                         theta[name]=theta[name]+STEP*k_fi*DESIRED_DISTANCE*(alpha+local_agent_last_beta[name])#2*mt.pi/(agents_number+1)
                         local_agent_bearing[name][0]=current_x[name]*mt.cos(theta[name])-current_y[name]*mt.sin(theta[name])
                         local_agent_bearing[name][1]=current_y[name]*mt.cos(theta[name])+current_x[name]*mt.sin(theta[name])
@@ -235,5 +190,3 @@ while not rp.is_shutdown() :
 
     LOCK.release()
     RATE.sleep()
-
-
