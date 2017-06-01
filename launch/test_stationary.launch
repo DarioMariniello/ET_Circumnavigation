@@ -3,8 +3,8 @@
 
   <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
 
-  
-  
+
+
   <group ns='agent1'>
 
 
@@ -38,18 +38,13 @@
       type='planner.py'
       output='screen'/>
 
-    <node name='estimate_stationary'
-      pkg='et_circumnavigation'
-      type='estimate_stationary.py'
-      output='screen'/>
-
     <node name='sensor_simulator_stationary'
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
-    <node name='neighbor_designer'
+    <!--node name='neighbor_designer'
       pkg='et_circumnavigation'
-      type='neighbor_designer.py'/>
+      type='neighbor_designer.py'/-->
 
 
   </group>
@@ -76,7 +71,7 @@
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
     <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
     <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
-  
+
 
     <node name='vehicle_simulator'
       pkg='et_circumnavigation'
@@ -87,18 +82,13 @@
       type='planner.py'
       output='screen'/>
 
-    <node name='estimate_stationary'
-      pkg='et_circumnavigation'
-      type='estimate_stationary.py'
-      output='screen'/>
-
     <node name='sensor_simulator_stationary'
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
-    <node name='neighbor_designer'
+    <!--node name='neighbor_designer'
       pkg='et_circumnavigation'
-      type='neighbor_designer.py'/>
+      type='neighbor_designer.py'/-->
 
   </group>
 
@@ -123,7 +113,7 @@
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
     <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
     <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
-  
+
 
     <node name='vehicle_simulator'
       pkg='et_circumnavigation'
@@ -134,37 +124,31 @@
       type='planner.py'
       output='screen'/>
 
-    <node name='estimate_stationary'
-      pkg='et_circumnavigation'
-      type='estimate_stationary.py'
-      output='screen'/>
-
     <node name='sensor_simulator_stationary'
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
-    <node name='neighbor_designer'
+    <!--node name='neighbor_designer'
       pkg='et_circumnavigation'
-      type='neighbor_designer.py'/>
+      type='neighbor_designer.py'/-->
 
   </group>
 
 
+  <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
 
+  <node name='cloud_add_remove'
+    pkg='et_circumnavigation'
+    type='cloud_add_remove.py'
+    output='screen'/>
 
+  <param name='rate' type='double' value='250.0'/>
 
+  <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
 
-    <node name='cloud_add_remove'
-      pkg='et_circumnavigation'
-      type='cloud_add_remove.py'
-      output='screen'/>
+  <node name='plotter_stationary'
+    pkg='et_circumnavigation'
+    type='plotter_stationary.py'/>
 
-    <param name='rate' type='double' value='250.0'/>
-    
-    <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
-
-    <node name='plotter_stationary'
-      pkg='et_circumnavigation'
-      type='plotter_stationary.py'/>
 
 </launch>

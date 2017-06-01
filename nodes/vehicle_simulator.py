@@ -2,6 +2,7 @@
 
 import rospy as rp
 import geomtwo.msg as gms
+import geomtwo.impl as gmi
 
 import threading as thd
 
@@ -12,8 +13,7 @@ import et_circumnavigation.srv as dns
 
 LOCK = thd.Lock()
 #Initial position
-position = np.array(rp.get_param('initial_position'))
-#Velocity
+position = gmi.Vector(*rp.get_param('initial_position'))
 velocity = None
 
 #stop=False
@@ -23,13 +23,13 @@ delay=rp.get_param('delay')
 rp.sleep(delay)
 rp.init_node('integrator')
 
-FREQUENCY = 15e1
+FREQUENCY = 30.0
 RATE = rp.Rate(FREQUENCY)
 TIME_STEP = 1.0/FREQUENCY
 
 
 # Handler for the service "RemoveVehicle"
-# def remove_vehicle_handler(req):   
+# def remove_vehicle_handler(req):
 #     global stop_publish
 #     LOCK.acquire()
 #     stop_publish=True
@@ -47,7 +47,7 @@ pub = rp.Publisher('position', gms.Point, queue_size=10)
 def cmdvel_callback(msg):
     global velocity
     LOCK.acquire()
-    velocity = np.array([msg.x, msg.y])
+    velocity = gmi.Vector(msg)
     LOCK.release()
 rp.Subscriber(
     name='cmdvel',
@@ -61,11 +61,8 @@ while not rp.is_shutdown() and not start:
     LOCK.acquire()
     if not velocity is None:
         start = True
-    #else:
-        #rp.logwarn('waiting for cmdvel')
     LOCK.release()
-    #Initial position publishing
-    pub.publish(gms.Point(x=position[0], y=position[1]))
+    pub.publish(position.serialize())
     RATE.sleep()
 
 while not rp.is_shutdown():
@@ -77,5 +74,5 @@ while not rp.is_shutdown():
     #rp.logwarn(position)
     LOCK.release()
     #Position publishing
-    pub.publish(gms.Point(x=position[0], y=position[1]))
+    pub.publish(position.serialize())
     RATE.sleep()

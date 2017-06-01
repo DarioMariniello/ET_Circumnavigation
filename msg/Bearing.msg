@@ -1,3 +1,0 @@
-geomtwo/Vector bearing_measurement
-bool truemeasure
-float32 last_beta

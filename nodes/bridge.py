@@ -43,7 +43,7 @@ def circum_handler(req):
     global circum
     circum=True
     LOCK.release()
-    return dns.CircumResponse()   
+    return dns.CircumResponse()
 
 rospy.Service('Circum',dns.Circum,circum_handler)
 
@@ -149,7 +149,3 @@ while not rospy.is_shutdown() and circum:
     pub_goal.publish(msg)
     pub_position.publish(gms.Point(x=trans[0], y=trans[1]))
     RATE.sleep()
-
-
-
-
