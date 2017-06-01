@@ -136,9 +136,11 @@ while not rp.is_shutdown():
         estimated_bearing = gmi.Versor(bearing_measurement.vector)
         if not neighbor_estimated_bearing is None:
             agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing, force_positive=True)
-        share_bearing_proxy.call(NODE_NAME, bearing_measurement)
+        try: share_bearing_proxy.call(NODE_NAME, bearing_measurement)
+        except: pass
         if not agent_beta is None:
-            share_beta_proxy.call(NODE_NAME, agent_beta)
+            try: share_beta_proxy.call(NODE_NAME, agent_beta)
+            except: pass
     LOCK.release()
     cmdvel_pub.publish(vel.serialize())
     est_pub.publish(estimate.serialize())

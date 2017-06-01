@@ -62,7 +62,8 @@ def share_bearing_handler(req):
     bearings[req.name] = gmi.Versor(req.bearing)
     for name in topology:
         if topology[name] == req.name:
-            neighbor_bearing_proxies[name].call(req.bearing)
+            try: neighbor_bearing_proxies[name].call(req.bearing)
+            except: pass
     LOCK.release()
     return dns.ShareBearingResponse()
 rp.Service("share_bearing", dns.ShareBearing, share_bearing_handler)
@@ -72,7 +73,8 @@ def share_beta_handler(req):
     betas[req.name] = req.beta
     for name in topology:
         if topology[name] == req.name:
-            neighbor_beta_proxies[name].call(req.beta)
+            try: neighbor_beta_proxies[name].call(req.beta)
+            except: pass
     LOCK.release()
     return dns.ShareBetaResponse()
 rp.Service("share_beta", dns.ShareBeta, share_beta_handler)
