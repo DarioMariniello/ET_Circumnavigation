@@ -135,21 +135,20 @@
   </group>
 
 
+  <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
 
+  <node name='cloud_add_remove'
+    pkg='et_circumnavigation'
+    type='cloud_add_remove.py'
+    output='screen'/>
 
+  <param name='rate' type='double' value='250.0'/>
 
+  <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
 
-    <node name='cloud_add_remove'
-      pkg='et_circumnavigation'
-      type='cloud_add_remove.py'
-      output='screen'/>
+  <node name='plotter_stationary'
+    pkg='et_circumnavigation'
+    type='plotter_stationary.py'/>
 
-    <param name='rate' type='double' value='250.0'/>
-
-    <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
-
-    <node name='plotter_stationary'
-      pkg='et_circumnavigation'
-      type='plotter_stationary.py'/>
 
 </launch>

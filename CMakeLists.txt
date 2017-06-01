@@ -58,6 +58,8 @@ catkin_python_setup()
    AddAgent.srv
    BearingMeasurement.srv
    ChangeFollower.srv
+   ShareBearing.srv
+   ShareBeta.srv
    NeighborBearing.srv
    NeighborBeta.srv
  )

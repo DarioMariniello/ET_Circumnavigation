@@ -41,10 +41,11 @@ rp.init_node('planner')
 
 
 def neighbor_bearing_handler(req):
-    global neighbor_bearing_measurement
+    global neighbor_bearing_measurement, neighbor_estimated_bearing
     LOCK.acquire()
     neighbor_bearing_measurement = gmi.Versor(req.bearing)
     neighbor_estimated_bearing = gmi.Versor(req.bearing)
+    rp.logwarn("received nbr bearing")
     LOCK.release()
     return dns.NeighborBearingResponse()
 rp.Service('neighbor_bearing', dns.NeighborBearing, neighbor_bearing_handler)
@@ -54,21 +55,13 @@ def neighbor_beta_handler(req):
     global neighbor_last_beta
     LOCK.acquire()
     neighbor_last_beta = req.beta
+    rp.logwarn("received nbr beta")
     LOCK.release()
     return dns.NeighborBetaResponse()
 rp.Service('neighbor_beta', dns.NeighborBeta, neighbor_beta_handler)
 
 
-def change_follower_handler(req):
-    global follower, follower_bearing_proxy, follower_beta_proxy
-    LOCK.acquire()
-    follower = req.follower
-    try:
-        follower_bearing_proxy = rp.ServiceProxy('/{}/neighbor_bearing'.format(follower), dns.NeighborBearing)
-        follower_beta_proxy = rp.ServiceProxy('/{}/neighbor_beta'.format(follower), dns.NeighborBeta)
-    except rp.ServiceException: follower = None
-    LOCK.release()
-rp.Service('change_follower', dns.ChangeFollower, change_follower_handler)
+
 
 
 def position_callback(msg):
@@ -101,6 +94,11 @@ rp.wait_for_service("/add_me")
 add_me_proxy = rp.ServiceProxy("/add_me", dns.AddAgent)
 add_me_proxy.call(NODE_NAME)
 
+rp.wait_for_service("/share_bearing")
+share_bearing_proxy = rp.ServiceProxy('/share_bearing', dns.ShareBearing)
+rp.wait_for_service("/share_beta")
+share_beta_proxy = rp.ServiceProxy('/share_beta', dns.ShareBeta)
+
 rp.wait_for_service("bearing_measurement")
 bearing_measurement_proxy = rp.ServiceProxy(name="bearing_measurement", service_class=dns.BearingMeasurement)
 bearing_measurement = gmi.Versor(bearing_measurement_proxy.call().bearing)
@@ -120,7 +118,7 @@ while not rp.is_shutdown():
     estimated_distance = (position-estimate).norm
     phi_bar = estimated_bearing.rotate(-np.pi/2)
     if not neighbor_estimated_bearing is None:
-        agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing)
+        agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing, force_positive=True)
     if not neighbor_last_beta is None:
         neighbor_estimated_bearing = neighbor_estimated_bearing.rotate(
             STEP*K_PHI*(ALPHA+neighbor_last_beta))
@@ -137,11 +135,10 @@ while not rp.is_shutdown():
         estimate = position + bearing_measurement.vector*DESIRED_DISTANCE
         estimated_bearing = gmi.Versor(bearing_measurement.vector)
         if not neighbor_estimated_bearing is None:
-            agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing)
-        if not follower is None:
-            follower_bearing_proxy.call(bearing_measurement)
-            if not agent_beta is None:
-                follower_beta_proxy.call(agent_beta)
+            agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing, force_positive=True)
+        share_bearing_proxy.call(NODE_NAME, bearing_measurement)
+        if not agent_beta is None:
+            share_beta_proxy.call(NODE_NAME, agent_beta)
     LOCK.release()
     cmdvel_pub.publish(vel.serialize())
     est_pub.publish(estimate.serialize())
