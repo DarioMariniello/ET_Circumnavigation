@@ -25,7 +25,7 @@ positions = dict()
 rp.init_node("cloud")
 
 LOCK = thd.Lock()
-FREQUENCY = 30.0
+FREQUENCY = 60.0
 RATE = rp.Rate(FREQUENCY)
 RADIUS = 1.0
 ALPHA = rp.get_param("alpha")
@@ -63,7 +63,7 @@ def share_bearing_handler(req):
     for name in topology:
         if topology[name] == req.name:
             try: neighbor_bearing_proxies[name].call(req.bearing)
-            except: pass
+            except: rp.logwarn("Error in service call")
     LOCK.release()
     return dns.ShareBearingResponse()
 rp.Service("share_bearing", dns.ShareBearing, share_bearing_handler)
@@ -74,7 +74,7 @@ def share_beta_handler(req):
     for name in topology:
         if topology[name] == req.name:
             try: neighbor_beta_proxies[name].call(req.beta)
-            except: pass
+            except: rp.logwarn("Error in service call")
     LOCK.release()
     return dns.ShareBetaResponse()
 rp.Service("share_beta", dns.ShareBeta, share_beta_handler)
@@ -103,8 +103,10 @@ while not rp.is_shutdown():
                         neighbor = other
             if neighbor != topology.get(name, None):
                 topology[name] = neighbor
-        if name in bearings and name in betas:
-            bearings[name] = bearings[name].rotate(STEP*K_PHI*(ALPHA+betas[name]))
+        if name in bearings:
+            bearings[name] = bearings[name].rotate(STEP*K_PHI*ALPHA)
+            if name in betas:
+                bearings[name] = bearings[name].rotate(STEP*K_PHI*betas[name])
     #rp.logwarn(topology)
     LOCK.release()
     RATE.sleep()

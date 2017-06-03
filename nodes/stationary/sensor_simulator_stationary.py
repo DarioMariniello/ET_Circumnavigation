@@ -36,7 +36,9 @@ rp.Subscriber(
 rp.wait_for_message('position', gms.Point)
 
 def bearing_measurement_handler(req):
+    LOCK.acquire()
     versor = gmi.Versor(TARGET_POSITION-position).serialize()
+    LOCK.release()
     return dns.BearingMeasurementResponse(versor)
 rp.Service(
     'bearing_measurement',
