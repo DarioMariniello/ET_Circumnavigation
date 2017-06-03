@@ -73,6 +73,8 @@ def share_beta_handler(req):
     betas[req.name] = req.beta
     for name in topology:
         if topology[name] == req.name:
+            try: change_topology_proxy.call(name, req.name)
+            except: rp.logwarn("Something wrong with change topology")
             try: neighbor_beta_proxies[name].call(req.beta)
             except: rp.logwarn("Error in service call")
     LOCK.release()
@@ -81,8 +83,8 @@ rp.Service("share_beta", dns.ShareBeta, share_beta_handler)
 
 
 
-
-
+rp.wait_for_service("change_topology")
+change_topology_proxy = rp.ServiceProxy("change_topology", dns.ChangeTopology)
 
 
 
@@ -103,6 +105,8 @@ while not rp.is_shutdown():
                         neighbor = other
             if neighbor != topology.get(name, None):
                 topology[name] = neighbor
+                #try: change_topology_proxy.call(name, neighbor)
+                #except: rp.logwarn("something went wrong with ChangeTopology")
         if name in bearings:
             bearings[name] = bearings[name].rotate(STEP*K_PHI*ALPHA)
             if name in betas:

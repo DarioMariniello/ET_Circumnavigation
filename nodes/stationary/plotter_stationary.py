@@ -2,6 +2,7 @@
 
 import rospy as rp
 import geomtwo.msg as gms
+import geomtwo.impl as gmi
 
 import threading as thd
 import copy as cp
@@ -23,7 +24,7 @@ TARGET_COLOR = rp.get_param('target_color','black')
 
 TARGET_POSITION = rp.get_param('target_position')
 
-RATE = rp.Rate(6e1)
+RATE = rp.Rate(3e1)
 
 
 
@@ -61,6 +62,9 @@ estimate_artists={}
 subscribers_position={}
 subscribers_estimate={}
 
+topology = {}
+topology_artists = {}
+
 # Service Handlers
 def add_agent_artist_handler(req):
     global agent_names
@@ -89,7 +93,17 @@ def add_agent_artist_handler(req):
     agent_artists[req.name]=None
     estimate_artists[req.name]=None
     LOCK.release()
-    return dns.AddAgentResponse()   
+    return dns.AddAgentResponse()
+
+
+
+def change_topology_handler(req):
+    global topology
+    LOCK.acquire()
+    topology[req.agent] = req.neighbor
+    LOCK.release()
+    return dns.ChangeTopologyResponse()
+rp.Service(name="change_topology", service_class=dns.ChangeTopology, handler=change_topology_handler)
 
 
 rp.Service('AddAgentArtist', dns.AddAgent, add_agent_artist_handler)
@@ -114,7 +128,7 @@ rp.Service('AddAgentArtist', dns.AddAgent, add_agent_artist_handler)
 #     subscribers_position[req.name].unregister()
 #     subscribers_estimate[req.name].unregister()
 #     LOCK.release()
-#     return dns.RemoveAgentResponse()   
+#     return dns.RemoveAgentResponse()
 
 
 # rp.Service('RemoveAgentArtist', dns.RemoveAgent, remove_agent_artist_handler)
@@ -125,13 +139,13 @@ rp.Service('AddAgentArtist', dns.AddAgent, add_agent_artist_handler)
 def agent_callback(msg, name):
     global agent_positions
     LOCK.acquire()
-    agent_positions[name] = [msg.x, msg.y]
+    agent_positions[name] = gmi.Point(msg)
     LOCK.release()
 
 def estimate_callback(msg, name):
     global agent_estimates
     LOCK.acquire()
-    agent_estimates[name] = [msg.x, msg.y]
+    agent_estimates[name] = gmi.Point(msg)
     LOCK.release()
 
 
@@ -147,16 +161,24 @@ while not rp.is_shutdown():
         if not agent_estimates[name] is None:
             est[name] = cp.copy(agent_estimates[name])
             agent_estimates[name] = None
+    top = cp.copy(topology)
     LOCK.release()
     for name,pos in ag_pos.items():
         if not pos is None:
             if not agent_artists[name] is None:
-                agent_artists[name].remove()
-            agent_artists[name] = plt.scatter(*ag_pos[name], color=AGENT_COLOR)
+                for artist in agent_artists[name]:
+                    artist.remove()
+            agent_artists[name] = ag_pos[name].draw( color=AGENT_COLOR)
     for name,estim in est.items():
         if not estim is None:
             if not estimate_artists[name] is None:
-                estimate_artists[name].remove()
-            estimate_artists[name] = plt.scatter(*est[name], color=ESTIMATE_COLOR)
+                for artist in estimate_artists[name]:
+                    artist.remove()
+            estimate_artists[name] = est[name].draw( color=ESTIMATE_COLOR)
+    for ag, nbr in top.items():
+        if not topology_artists.get(ag, None) is None:
+            for artist in topology_artists[ag]:
+                artist.remove()
+        topology_artists[ag] = (ag_pos[nbr]-ag_pos[ag]).saturate(0.15).draw(x0=ag_pos[ag].x, y0=ag_pos[ag].y, color="green", alpha=0.3)
     plt.draw()
     RATE.sleep()

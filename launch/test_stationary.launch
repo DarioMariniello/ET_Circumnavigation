@@ -242,7 +242,37 @@
 
   </group>
 
+  <group ns='agent8'>
 
+    <rosparam param='node_name'>
+      'agent8'
+    </rosparam>
+
+    <param name='delay' type='double' value='7.0'/>
+
+    <rosparam param='initial_position'>
+      [-0.3,1.0]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+
+
+    <node name='vehicle_simulator'
+      pkg='et_circumnavigation'
+      type='vehicle_simulator.py'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='et_circumnavigation'
+      type='sensor_simulator_stationary.py'/>
+
+  </group>
 
   <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
 
