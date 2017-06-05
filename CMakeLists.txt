@@ -55,6 +55,7 @@ catkin_python_setup()
 ## Generate services in the 'srv' folder
  add_service_files(
    FILES
+   ChangeTopology.srv
    AddAgent.srv
    BearingMeasurement.srv
    ChangeFollower.srv

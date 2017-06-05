@@ -23,7 +23,7 @@ delay=rp.get_param('delay')
 rp.sleep(delay)
 rp.init_node('integrator')
 
-FREQUENCY = 30.0
+FREQUENCY = 60.0
 RATE = rp.Rate(FREQUENCY)
 TIME_STEP = 1.0/FREQUENCY
 
@@ -67,12 +67,14 @@ while not rp.is_shutdown() and not start:
 
 while not rp.is_shutdown():
     LOCK.acquire()
-    # if stop_publish:
-    #     rp.signal_shutdown("agent vehicle removed")
-    #Integration
-    position = position+velocity*TIME_STEP
-    #rp.logwarn(position)
+    if not velocity is None:
+        # if stop_publish:
+        #     rp.signal_shutdown("agent vehicle removed")
+        #Integration
+        position = position+velocity*TIME_STEP
+        velocity = None
+        #rp.logwarn(position)
     LOCK.release()
-    #Position publishing
     pub.publish(position.serialize())
+    #Position publishing
     RATE.sleep()
