@@ -21,6 +21,7 @@ LOCK=thd.Lock()
 
 initial_goal = np.array(rospy.get_param('initial_goal'))
 
+node_name = rospy.get_param('node_name')
 
 
 rospy.init_node('bridge')
@@ -83,8 +84,8 @@ while not rospy.is_shutdown() and not circum:
     msg.pose.orientation.y = quaternion[1]
     msg.pose.orientation.z = quaternion[2]
     msg.pose.orientation.w = quaternion[3]
-    listener.waitForTransform(worldFrame, "/Crazyflie1", rospy.Time(), rospy.Duration(2.0))
-    (trans,rot) = listener.lookupTransform(worldFrame,'/Crazyflie1', rospy.Time(0), )
+    listener.waitForTransform(worldFrame, "/"+node_name, rospy.Time(), rospy.Duration(2.0))
+    (trans,rot) = listener.lookupTransform(worldFrame,"/"+node_name, rospy.Time(0), )
     LOCK.release()
     #hover goal publishing
     msg.header.seq += 1
@@ -114,8 +115,8 @@ while not rospy.is_shutdown() and circum and not start:
     msg.pose.orientation.y = quaternion[1]
     msg.pose.orientation.z = quaternion[2]
     msg.pose.orientation.w = quaternion[3]
-    listener.waitForTransform(worldFrame, "/Crazyflie1", rospy.Time(), rospy.Duration(0.5))
-    (trans,rot) = listener.lookupTransform('/world','/Crazyflie1', rospy.Time(0))
+    listener.waitForTransform(worldFrame, "/"+node_name, rospy.Time(), rospy.Duration(0.5))
+    (trans,rot) = listener.lookupTransform('/world',"/"+node_name, rospy.Time(0))
     LOCK.release()
     #hover goal publishing
     msg.header.seq += 1
@@ -127,8 +128,8 @@ while not rospy.is_shutdown() and circum and not start:
 
 while not rospy.is_shutdown() and circum:
     LOCK.acquire()
-    listener.waitForTransform(worldFrame, "/Crazyflie1", rospy.Time(), rospy.Duration(0.5))
-    (trans,rot) = listener.lookupTransform('/world','/Crazyflie1', rospy.Time(0))
+    listener.waitForTransform(worldFrame, "/"+node_name, rospy.Time(), rospy.Duration(0.5))
+    (trans,rot) = listener.lookupTransform('/world',"/"+node_name, rospy.Time(0))
     position=np.array([trans[0],trans[1]])
     #Integration
     goal= position+velocity*TIME_STEP

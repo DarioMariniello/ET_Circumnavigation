@@ -1,7 +1,7 @@
 target_color: 'red'
 estimate_color: 'black'
 agent_color: 'blue'
-xmin: -4.0
-xmax: 4.0
-ymin: -4.0
-ymax: 4.0
+xmin: -2.0
+xmax: 2.0
+ymin: -2.0
+ymax: 2.0

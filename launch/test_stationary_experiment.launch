@@ -2,13 +2,9 @@
   
   <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
 
-  <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
-  </include>
-  
+
   <group ns='Crazyflie1'>
 
-
-    <param name='rate' type='double' value='250.0'/>
 
     <rosparam param='node_name'>
       'Crazyflie1'
@@ -25,12 +21,11 @@
     </rosparam>
 
     <rosparam param='initial_goal'>
-      [-0.5 ,-0.5 ,1.1]
+      [0.0 ,0.5 ,0.5]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
     <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
-
     <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
   
 
@@ -44,9 +39,49 @@
       type='planner.py'
       output='screen'/>
 
-    <node name='estimate_stationary'
+    <node name='sensor_simulator_stationary'
       pkg='et_circumnavigation'
-      type='estimate_stationary.py'
+      type='sensor_simulator_stationary.py'/>
+
+  </group>
+
+
+
+  <group ns='Crazyflie2'>
+
+
+
+    <rosparam param='node_name'>
+      'Crazyflie2'
+    </rosparam>
+
+    <param name='delay' type='double' value='2.0'/>
+
+    <rosparam param='initial_position'>
+      [0,0]
+    </rosparam>
+
+    <rosparam param='initial_estimate'>
+      [0.2, 0.2]
+    </rosparam>
+
+    <rosparam param='initial_goal'>
+      [-0.5 ,0.0 ,1.0]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+  
+
+    <node name='bridge'
+      pkg='et_circumnavigation'
+      type='bridge.py'
+      output='screen'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
       output='screen'/>
 
     <node name='sensor_simulator_stationary'
@@ -56,34 +91,98 @@
   </group>
 
 
-  
 
-    <param name='delay' type='double' value='1000.0'/>
-    <param name='agent_to_remove' type='str' value='agent2'/>
-    
-    <node name='remove_agent_2'
-      pkg='et_circumnavigation'
-      type='remove_agent.py'
-      output='screen'/>
+  <group ns='Crazyflie3'>
 
-
-    <node name='cloud_add_remove'
-      pkg='et_circumnavigation'
-      type='cloud_add_remove.py'
-      output='screen'/>
 
     <param name='rate' type='double' value='250.0'/>
-    
-    <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
 
-    <node name='plotter_stationary'
+
+    <rosparam param='node_name'>
+      'Crazyflie3'
+    </rosparam>
+
+    <param name='delay' type='double' value='2.0'/>
+
+    <rosparam param='initial_position'>
+      [0,0]
+    </rosparam>
+
+    <rosparam param='initial_estimate'>
+      [0.2, 0.2]
+    </rosparam>
+
+    <rosparam param='initial_goal'>
+      [0.0 ,-0.5 ,1.5]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+  
+
+    <node name='bridge'
       pkg='et_circumnavigation'
-      type='plotter_stationary.py'/>
+      type='bridge.py'
+      output='screen'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='et_circumnavigation'
+      type='sensor_simulator_stationary.py'/>
+
+  </group>
 
 
-     <node pkg="rosbag" type="record" name="recording_node"
-       args="record /Crazyflie1/position /Crazyflie1/goal /Crazyflie1/cmdvel /Crazyflie1/estimate "/>  
 
 
+
+
+
+    
+    <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
+    <arg name="uri" value="radio://0/90/2M/E7E7E7E7E7" />
+    <arg name="frame" value="Crazyflie1" />
+   </include>
+
+    <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
+    <arg name="uri" value="radio://0/90/2M/E7E7E7E7BC" />
+    <arg name="frame" value="Crazyflie2" />
+   </include>
+
+    <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
+    <arg name="uri" value="radio://0/90/2M/E7E7E7E7DE" />
+    <arg name="frame" value="Crazyflie3" />
+   </include>
+
+
+  <include file="$(find qualisys)/launch/qualisys.launch"/>
+
+## running driver and sending commands via radio
+  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  </include>
+
+  <!-- run rviz -->
+  <param name="robot_description" command="$(find xacro)/xacro.py $(find crazyflie_description)/urdf/crazyflie2.urdf.xacro" />
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find crazyflie_demo)/launch/crazyflie_pos.rviz" required="true" />
+
+
+  <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+
+  <node name='cloud_add_remove'
+    pkg='et_circumnavigation'
+    type='cloud_add_remove.py'
+    output='screen'/>
+
+
+  <rosparam command='load' file='$(find et_circumnavigation)/param/plotter_stationary.yaml'/>
+
+  <node name='plotter_stationary'
+    pkg='et_circumnavigation'
+    type='plotter_stationary.py'/>
 
 </launch>

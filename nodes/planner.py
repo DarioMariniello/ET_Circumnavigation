@@ -45,7 +45,7 @@ def neighbor_bearing_handler(req):
     global neighbor_bearing_measurement, neighbor_estimated_bearing
     NBR_LOCK.acquire()
     neighbor_bearing_measurement = gmi.Versor(req.bearing)
-    rp.logwarn("received nbr bearing")
+#    rp.logwarn("received nbr bearing")
     NBR_LOCK.release()
     return dns.NeighborBearingResponse()
 rp.Service('neighbor_bearing', dns.NeighborBearing, neighbor_bearing_handler)
@@ -55,7 +55,7 @@ def neighbor_beta_handler(req):
     global neighbor_last_beta
     NBR_LOCK.acquire()
     neighbor_last_beta = req.beta
-    rp.logwarn("received nbr beta")
+#    rp.logwarn("received nbr beta")
     NBR_LOCK.release()
     return dns.NeighborBetaResponse()
 rp.Service('neighbor_beta', dns.NeighborBeta, neighbor_beta_handler)
@@ -107,7 +107,7 @@ estimated_bearing = gmi.Versor(bearing_measurement)
 start = False
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
-    start = not position is None
+    start = all([not data is None for data in [position, bearing_measurement]])
     LOCK.release()
     RATE.sleep()
 

@@ -63,6 +63,8 @@ catkin_python_setup()
    ShareBeta.srv
    NeighborBearing.srv
    NeighborBeta.srv
+   Circum.srv
+   Control.srv
  )
 
 ## Generate actions in the 'action' folder
@@ -75,7 +77,7 @@ catkin_python_setup()
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
    DEPENDENCIES
-   #std_msgs
+   std_msgs
    geomtwo
 )
 

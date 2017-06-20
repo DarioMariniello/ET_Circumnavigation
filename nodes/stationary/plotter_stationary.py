@@ -155,6 +155,7 @@ while not rp.is_shutdown():
     est = {}
     LOCK.acquire()
     for name in agent_names:
+#        rp.logwarn(name)
         if not agent_positions[name] is None:
             ag_pos[name] = cp.copy(agent_positions[name])
             agent_positions[name] = None
@@ -162,6 +163,7 @@ while not rp.is_shutdown():
             est[name] = cp.copy(agent_estimates[name])
             agent_estimates[name] = None
     top = cp.copy(topology)
+#    rp.logwarn(topology)
     LOCK.release()
     for name,pos in ag_pos.items():
         if not pos is None:

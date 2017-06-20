@@ -274,6 +274,8 @@
 
   </group>
 
+  
+
   <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
 
   <node name='cloud_add_remove'

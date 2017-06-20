@@ -11,6 +11,7 @@ agent_names = list()
 neighbor_bearing_proxies = dict()
 neighbor_beta_proxies = dict()
 position_subscribers = dict()
+agents_proxies = dict()
 
 bearings = dict()
 betas = dict()
@@ -54,8 +55,15 @@ def add_me_handler(req):
 rp.Service('add_me', dns.AddAgent, add_me_handler)
 
 
-
-
+def control_handler(req):
+    LOCK.acquire()
+    for name in agent_names:
+            agents_proxies[name] = rp.ServiceProxy(name+"/Circum", dns.Circum)
+            try: agents_proxies[name].call()
+            except: rp.logwarn("Error in service call Circum")
+    LOCK.release()
+    return dns.ControlResponse()
+rp.Service('Control', dns.Control, control_handler)
 
 def share_bearing_handler(req):
     LOCK.acquire()

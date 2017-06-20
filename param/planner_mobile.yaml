@@ -1,4 +1,5 @@
-desired_distance: 1.0
-alpha: 0.5
-k_fi: 0.3
-k_d: 1
+desired_distance: 0.30
+communication_radius: 1.0
+alpha: 2.0
+k_fi: 0.5
+k_d: 3.0
