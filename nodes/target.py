@@ -37,5 +37,3 @@ while not rp.is_shutdown():
     #Position publishing
     target_pub.publish(gms.Point(x=target_position[0], y=target_position[1]))
     RATE.sleep()
-
-

@@ -64,6 +64,7 @@ subscribers_estimate={}
 topology = {}
 topology_artists = {}
 
+target_artist= None
 # Service Handlers
 def add_agent_artist_handler(req):
     global agent_names
@@ -150,13 +151,13 @@ def estimate_callback(msg, name):
 def target_position_callback(msg):
     global target_position
     LOCK.acquire()
-    target_position = np.array([msg.x, msg.y])
+    target_position = gmi.Point(msg)
     LOCK.release()
 rp.Subscriber(
     name='target_position',
     data_class=gms.Point,
     callback=target_position_callback,
-    queue_size=10)
+    queue_size=1)
 
 # Main
 while not rp.is_shutdown():
@@ -172,7 +173,6 @@ while not rp.is_shutdown():
             est[name] = cp.copy(agent_estimates[name])
             agent_estimates[name] = None
     top = cp.copy(topology)
-#    rp.logwarn(topology)
     LOCK.release()
     for name,pos in ag_pos.items():
         if not pos is None:
@@ -191,9 +191,10 @@ while not rp.is_shutdown():
             for artist in topology_artists[ag]:
                 artist.remove()
         topology_artists[ag] = (ag_pos[nbr]-ag_pos[ag]).saturate(0.15).draw(x0=ag_pos[ag].x, y0=ag_pos[ag].y, color="green", alpha=0.3)
-    LOCK.acquire()
     if not target_position is None:
-        plt.scatter(*target_position, color=TARGET_COLOR)
-    LOCK.release()
+        if not target_artist is None:
+            for artist in target_artist:
+                artist.remove()
+        target_artist= target_position.draw( color=TARGET_COLOR)
     plt.draw()
     RATE.sleep()

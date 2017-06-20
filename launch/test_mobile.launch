@@ -24,7 +24,7 @@
   <remap from='target_position' to='/target/target_position'/>
 
 
-  <group ns='agent1'>
+<group ns='agent1'>
 
 
     <rosparam param='node_name'>
@@ -160,12 +160,7 @@
       pkg='et_circumnavigation'
       type='neighbor_designer.py'/-->
 
-  </group>
-
-
-
-
-
+</group>
 
 
   <rosparam command='load' file='$(find et_circumnavigation)/param/planner_mobile.yaml'/>
