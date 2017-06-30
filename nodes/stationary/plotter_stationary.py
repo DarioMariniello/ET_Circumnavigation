@@ -23,6 +23,7 @@ TARGET_COLOR = rp.get_param('target_color','black')
 #AGENT_NAMES = rp.get_param('agent_names').split()
 
 TARGET_POSITION = rp.get_param('target_position')
+DESIRED_DISTANCE = rp.get_param('desired_distance')
 
 RATE = rp.Rate(3e1)
 
@@ -44,6 +45,8 @@ helper = floating_axes.GridHelperCurveLinear(transform, plot_extents)
 ax = floating_axes.FloatingSubplot(fig, 111, grid_helper=helper)
 fig.add_subplot(ax)
 plt.scatter(*TARGET_POSITION, color=TARGET_COLOR)
+circle=plt.Circle(TARGET_POSITION, DESIRED_DISTANCE, color='y', fill=False)
+ax.add_artist(circle)
 plt.axis('equal')
 plt.xlim((XMIN,XMAX))
 plt.ylim((YMIN,YMAX))

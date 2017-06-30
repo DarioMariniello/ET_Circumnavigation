@@ -1,5 +1,7 @@
-desired_distance: 0.35
-communication_radius: 1.0
-alpha: 2.0
-k_fi: 0.2
-k_d: 3.0
+desired_distance: 1.0
+communication_radius: 1.5
+collision_radius: 0.15
+alpha: 3.0
+k_fi: 0.1
+k_d: 6.0
+k_obst: 0.02

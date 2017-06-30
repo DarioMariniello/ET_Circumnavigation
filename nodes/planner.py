@@ -24,7 +24,7 @@ bearing_measurement = None
 estimated_bearing = None
 estimated_target = None
 position = None
-
+repulsion = None
 
 
 
@@ -71,6 +71,14 @@ def position_callback(msg):
     LOCK.release()
 rp.Subscriber("position", gms.Point, position_callback)
 
+def repulsion_callback(msg):
+    global repulsion
+    LOCK.acquire()
+    repulsion = gmi.Vector(msg)
+    LOCK.release()
+rp.Subscriber("repulsion", gms.Vector, repulsion_callback)
+
+
 
 cmdvel_pub = rp.Publisher(
     name='cmdvel',
@@ -107,7 +115,7 @@ estimated_bearing = gmi.Versor(bearing_measurement)
 start = False
 while not rp.is_shutdown() and not start:
     LOCK.acquire()
-    start = all([not data is None for data in [position, bearing_measurement]])
+    start = all([not data is None for data in [position, bearing_measurement,repulsion]])
     LOCK.release()
     RATE.sleep()
 
@@ -117,6 +125,7 @@ while not rp.is_shutdown():
 
     LOCK.acquire()
     pos = gmi.Point(position)
+    rep=gmi.Vector(repulsion)
     LOCK.release()
 
     NBR_LOCK.acquire()
@@ -140,11 +149,13 @@ while not rp.is_shutdown():
             STEP*K_PHI*(ALPHA+agent_beta))
     vel = K_D*estimated_bearing.vector*(estimated_distance-DESIRED_DISTANCE)
     if not agent_beta is None:
-        vel += K_PHI*estimated_distance*phi_bar.vector*(ALPHA+agent_beta)
-        estimated_bearing = estimated_bearing.rotate(STEP*K_PHI*(ALPHA+agent_beta))
+        vel += K_PHI*estimated_distance*phi_bar.vector*(ALPHA*agent_beta)
+        estimated_bearing = estimated_bearing.rotate(STEP*K_PHI*(ALPHA*agent_beta))
     else:
         vel += K_PHI*estimated_distance*phi_bar.vector*ALPHA
         estimated_bearing = estimated_bearing.rotate(STEP*K_PHI*ALPHA)
+    if rep.norm>0:
+        vel += repulsion
     #rp.logwarn(estimated_bearing.vector*bearing_measurement.vector)
     if estimated_bearing.vector*bearing_measurement.vector < BEARING_THRESHOLD:
         bearing_measurement = gmi.Versor(bearing_measurement_proxy.call().bearing)

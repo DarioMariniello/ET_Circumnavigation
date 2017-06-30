@@ -2,8 +2,10 @@
   
   <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
 
-
   <group ns='Crazyflie1'>
+
+
+    <param name='rate' type='double' value='250.0'/>
 
 
     <rosparam param='node_name'>
@@ -21,7 +23,7 @@
     </rosparam>
 
     <rosparam param='initial_goal'>
-      [0.0 ,0.5 ,0.5]
+      [-0.5 ,0.5 ,0.8]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -43,12 +45,19 @@
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
+    <node name='position_bridge'
+      pkg='et_circumnavigation'
+      type='position_bridge.py'
+      output='screen'/>
+
   </group>
 
 
 
   <group ns='Crazyflie2'>
 
+
+    <param name='rate' type='double' value='250.0'/>
 
 
     <rosparam param='node_name'>
@@ -66,7 +75,7 @@
     </rosparam>
 
     <rosparam param='initial_goal'>
-      [-0.5 ,0.0 ,1.0]
+      [-0.5 ,-0.5 ,0.5]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -88,8 +97,12 @@
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
-  </group>
+    <node name='position_bridge'
+      pkg='et_circumnavigation'
+      type='position_bridge.py'
+      output='screen'/>
 
+  </group>
 
 
   <group ns='Crazyflie3'>
@@ -113,7 +126,7 @@
     </rosparam>
 
     <rosparam param='initial_goal'>
-      [0.0 ,-0.5 ,1.5]
+      [0.5 ,0.5 ,1.0]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -135,15 +148,19 @@
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
+    <node name='position_bridge'
+      pkg='et_circumnavigation'
+      type='position_bridge.py'
+      output='screen'/>
+
   </group>
 
 
 
 
-
-
-
     
+
+
     <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
     <arg name="uri" value="radio://0/90/2M/E7E7E7E7E7" />
     <arg name="frame" value="Crazyflie1" />
@@ -158,6 +175,7 @@
     <arg name="uri" value="radio://0/90/2M/E7E7E7E7DE" />
     <arg name="frame" value="Crazyflie3" />
    </include>
+
 
 
   <include file="$(find qualisys)/launch/qualisys.launch"/>
@@ -184,5 +202,8 @@
   <node name='plotter_stationary'
     pkg='et_circumnavigation'
     type='plotter_stationary.py'/>
+
+  <node pkg="rosbag" type="record" name="recording_node"
+   args="-O $(find et_circumnavigation)/trial -a"/> 
 
 </launch>

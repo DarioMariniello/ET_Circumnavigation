@@ -11,12 +11,15 @@ agent_names = list()
 neighbor_bearing_proxies = dict()
 neighbor_beta_proxies = dict()
 position_subscribers = dict()
+repulsion_publishers = dict ()
 agents_proxies = dict()
 
 bearings = dict()
 betas = dict()
 topology = dict()
 positions = dict()
+repulsions= dict()
+ag_dist= dict()
 # remove_agent_proxies={}
 # remove_sensor_proxies={}
 # remove_estimate_proxies={}
@@ -28,9 +31,11 @@ rp.init_node("cloud")
 LOCK = thd.Lock()
 FREQUENCY = 60.0
 RATE = rp.Rate(FREQUENCY)
-RADIUS = 1.0
+COMM_RADIUS = rp.get_param("communication_radius")
+COLL_RADIUS = rp.get_param("collision_radius")
 ALPHA = rp.get_param("alpha")
 K_PHI = rp.get_param("k_fi")
+K_OBST = rp.get_param("k_obst")
 STEP = 1.0/FREQUENCY
 
 
@@ -49,6 +54,10 @@ def add_me_handler(req):
     neighbor_bearing_proxies[req.name] = rp.ServiceProxy(req.name+"/neighbor_bearing", dns.NeighborBearing)
     neighbor_beta_proxies[req.name] = rp.ServiceProxy(req.name+"/neighbor_beta", dns.NeighborBeta)
     position_subscribers[req.name] = rp.Subscriber(req.name+"/position", gms.Point, position_callback, callback_args=req.name)
+    repulsion_publishers[req.name] = rp.Publisher(
+    name=req.name+"/repulsion",
+    data_class=gms.Vector,
+    queue_size=10)
     LOCK.release()
     plotter_proxy.call(req.name)
     return dns.AddAgentResponse()
@@ -106,7 +115,7 @@ while not rp.is_shutdown():
             brg = bearings[name]
             smallest_angle = 2*m.pi
             for other in agent_names:
-                if other != name and other in positions and other in bearings and (pos-positions[other]).norm < RADIUS:
+                if other != name and other in positions and other in bearings and (pos-positions[other]).norm < COMM_RADIUS:
                     angle = brg.angle_to(bearings[other], force_positive=True)
                     if angle < smallest_angle:
                         smallest_angle = angle
@@ -119,8 +128,22 @@ while not rp.is_shutdown():
             bearings[name] = bearings[name].rotate(STEP*K_PHI*ALPHA)
             if name in betas:
                 bearings[name] = bearings[name].rotate(STEP*K_PHI*betas[name])
+#################collision avoidance check only communication circle
+        if name in positions and name in repulsions :
+            pos = positions[name]
+            repulsions[name]=gmi.Vector(0.0,0.0)
+            for other in agent_names:
+                if other != name and other in positions :
+                    if (pos-positions[other]).norm<= (COLL_RADIUS) :
+                        ag_dist[other]=pos-positions[other]
+                        repulsions[name]+=K_OBST*((1/(ag_dist[other].norm))-(1/COLL_RADIUS))*(1/((ag_dist[other].norm)**3))*(ag_dist[other])
+        else :
+            repulsions[name]=gmi.Vector(0.0,0.0)
+#############################################
     #rp.logwarn(topology)
     LOCK.release()
+    for name in repulsion_publishers.keys():
+            repulsion_publishers[name].publish(repulsions[name].serialize())
     RATE.sleep()
 
 
