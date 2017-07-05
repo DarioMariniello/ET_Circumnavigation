@@ -9,7 +9,7 @@ import math as m
 
 agent_names = list()
 neighbor_bearing_proxies = dict()
-neighbor_beta_proxies = dict()
+#neighbor_beta_proxies = dict()
 position_subscribers = dict()
 repulsion_publishers = dict ()
 agents_proxies = dict()
@@ -52,7 +52,7 @@ def add_me_handler(req):
     LOCK.acquire()
     agent_names.append(req.name)
     neighbor_bearing_proxies[req.name] = rp.ServiceProxy(req.name+"/neighbor_bearing", dns.NeighborBearing)
-    neighbor_beta_proxies[req.name] = rp.ServiceProxy(req.name+"/neighbor_beta", dns.NeighborBeta)
+#    neighbor_beta_proxies[req.name] = rp.ServiceProxy(req.name+"/neighbor_beta", dns.NeighborBeta)
     position_subscribers[req.name] = rp.Subscriber(req.name+"/position", gms.Point, position_callback, callback_args=req.name)
     repulsion_publishers[req.name] = rp.Publisher(
     name=req.name+"/repulsion",
@@ -88,12 +88,12 @@ rp.Service("share_bearing", dns.ShareBearing, share_bearing_handler)
 def share_beta_handler(req):
     LOCK.acquire()
     betas[req.name] = req.beta
-    for name in topology:
-        if topology[name] == req.name:
-            try: change_topology_proxy.call(name, req.name)
-            except: rp.logwarn("Something wrong with change topology")
-            try: neighbor_beta_proxies[name].call(req.beta)
-            except: rp.logwarn("Error in service call")
+#    for name in topology:
+#        if topology[name] == req.name:
+#            try: change_topology_proxy.call(name, req.name)
+#            except: rp.logwarn("Something wrong with change topology")
+#            try: neighbor_beta_proxies[name].call(req.beta)
+#            except: rp.logwarn("Error in service call")
     LOCK.release()
     return dns.ShareBetaResponse()
 rp.Service("share_beta", dns.ShareBeta, share_beta_handler)
@@ -116,14 +116,18 @@ while not rp.is_shutdown():
             smallest_angle = 2*m.pi
             for other in agent_names:
                 if other != name and other in positions and other in bearings and (pos-positions[other]).norm < COMM_RADIUS:
+#                    if name == 'agent1':
+#                        print (other)
                     angle = brg.angle_to(bearings[other], force_positive=True)
                     if angle < smallest_angle:
                         smallest_angle = angle
                         neighbor = other
+                        
             if neighbor != topology.get(name, None):
                 topology[name] = neighbor
-                #try: change_topology_proxy.call(name, neighbor)
-                #except: rp.logwarn("something went wrong with ChangeTopology")
+                rp.logwarn(topology[name])
+                try: change_topology_proxy.call(name, neighbor)
+                except: rp.logwarn("something went wrong with ChangeTopology")
         if name in bearings:
             bearings[name] = bearings[name].rotate(STEP*K_PHI*ALPHA)
             if name in betas:
@@ -140,7 +144,7 @@ while not rp.is_shutdown():
         else :
             repulsions[name]=gmi.Vector(0.0,0.0)
 #############################################
-    #rp.logwarn(topology)
+#    rp.logwarn(topology)
     LOCK.release()
     for name in repulsion_publishers.keys():
             repulsion_publishers[name].publish(repulsions[name].serialize())

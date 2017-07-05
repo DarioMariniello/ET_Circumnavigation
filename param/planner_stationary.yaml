@@ -1,5 +1,10 @@
-desired_distance: 1.0
-communication_radius: 1.5
+desired_distance: 0.7
+communication_radius: 1.0
+# NOTE: in order to make convergence possible, i.e. to let agents see at least their neighbor
+#       in nominal configuration, this inequality should be respected:
+# 
+#          communication_radius>2*desired_distance*cos[(n*90-180)/n]
+#
 collision_radius: 0.15
 alpha: 3.0
 k_fi: 0.1

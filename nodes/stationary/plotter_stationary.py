@@ -104,6 +104,7 @@ def change_topology_handler(req):
     global topology
     LOCK.acquire()
     topology[req.agent] = req.neighbor
+#    rp.logwarn(req.neighbor)
     LOCK.release()
     return dns.ChangeTopologyResponse()
 rp.Service(name="change_topology", service_class=dns.ChangeTopology, handler=change_topology_handler)
@@ -182,8 +183,13 @@ while not rp.is_shutdown():
             estimate_artists[name] = est[name].draw( color=ESTIMATE_COLOR)
     for ag, nbr in top.items():
         if not topology_artists.get(ag, None) is None:
-            for artist in topology_artists[ag]:
-                artist.remove()
-        topology_artists[ag] = (ag_pos[nbr]-ag_pos[ag]).saturate(0.15).draw(x0=ag_pos[ag].x, y0=ag_pos[ag].y, color="green", alpha=0.3)
+            for artist in topology_artists[ag] :
+                if not nbr=="":
+                  artist.remove()
+        #dnbr can be empty because when an agents gets a neighbor and at a certain point he doesn't have any, cloud will call change_topology with None as neighbor. So, the service stores empty in 
+        #the name [neighbor]. Actually, the check on nbr is just a workaround: indeed the artist stays fixed there(the green arrow remains sill "floating") ; the proper solution should be remove 
+        #the item from the topology dictionary, but then one could have different topology in the cloud node...but i don't know
+        if not nbr=="":
+            topology_artists[ag] = (ag_pos[nbr]-ag_pos[ag]).saturate(0.15).draw(x0=ag_pos[ag].x, y0=ag_pos[ag].y, color="green", alpha=0.3)
     plt.draw()
     RATE.sleep()
