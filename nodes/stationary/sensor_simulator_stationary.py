@@ -14,11 +14,18 @@ LOCK = thd.Lock()
 
 #Variables
 position = None
-
+stop_publish=False
 
 rp.init_node('sensor_simulator')
 rp.sleep(DELAY)
 
+def remove_sensor_handler(req):   
+    global stop_publish
+    LOCK.acquire()
+    stop_publish=True
+    LOCK.release()
+    return dns.RemoveAgentResponse()
+rp.Service('RemoveSensor', dns.RemoveAgent, remove_sensor_handler)
 
 #Subscribers
 def position_callback(msg):
@@ -30,7 +37,7 @@ rp.Subscriber(
     name='position',
     data_class=gms.Point,
     callback=position_callback,
-    queue_size=10)
+    queue_size=1)
 
 
 rp.wait_for_message('position', gms.Point)

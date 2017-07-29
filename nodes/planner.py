@@ -14,6 +14,7 @@ BEARING_THRESHOLD = 0.0
 ALPHA = rp.get_param('alpha')
 K_PHI = rp.get_param('k_fi')
 K_D = rp.get_param('k_d')
+K_ALPHA= rp.get_param('k_alpha')
 
 NODE_NAME = rp.get_param('node_name')
 DELAY = rp.get_param('delay')
@@ -34,6 +35,8 @@ neighbor_estimated_bearing = None
 agent_beta = None
 follower = None
 
+global stop_publish
+stop_publish=False
 
 LOCK = thd.Lock()
 NBR_LOCK = thd.Lock()
@@ -61,7 +64,14 @@ rp.Service('neighbor_bearing', dns.NeighborBearing, neighbor_bearing_handler)
 #rp.Service('neighbor_beta', dns.NeighborBeta, neighbor_beta_handler)
 
 
-
+def remove_planner_handler(req):
+    global stop_publish   
+    LOCK.acquire()
+    repul.unregister()
+    stop_publish=True
+    LOCK.release()
+    return dns.RemoveAgentResponse()
+rp.Service('RemovePlanner', dns.RemoveAgent, remove_planner_handler)
 
 
 def position_callback(msg):
@@ -76,14 +86,13 @@ def repulsion_callback(msg):
     LOCK.acquire()
     repulsion = gmi.Vector(msg)
     LOCK.release()
-rp.Subscriber("repulsion", gms.Vector, repulsion_callback)
-
+repul=rp.Subscriber("repulsion", gms.Vector, repulsion_callback)
 
 
 cmdvel_pub = rp.Publisher(
     name='cmdvel',
     data_class=gms.Vector,
-    queue_size=10)
+    queue_size=5)
 
 est_pub = rp.Publisher(
     name='estimate',
@@ -111,6 +120,7 @@ rp.wait_for_service("bearing_measurement")
 bearing_measurement_proxy = rp.ServiceProxy(name="bearing_measurement", service_class=dns.BearingMeasurement)
 bearing_measurement = gmi.Versor(bearing_measurement_proxy.call().bearing)
 estimated_bearing = gmi.Versor(bearing_measurement)
+phi_bar = estimated_bearing.rotate(-np.pi/2)
 
 start = False
 while not rp.is_shutdown() and not start:
@@ -122,6 +132,9 @@ while not rp.is_shutdown() and not start:
 estimate = position + bearing_measurement.vector*DESIRED_DISTANCE
 
 while not rp.is_shutdown():
+
+    if stop_publish:
+        rp.signal_shutdown("agent planner removed")
 
     LOCK.acquire()
     pos = gmi.Point(position)
@@ -135,40 +148,53 @@ while not rp.is_shutdown():
     if not neighbor_bearing_measurement is None:
         nbr_lbm = gmi.Versor(neighbor_bearing_measurement)
         neighbor_estimated_bearing = gmi.Versor(nbr_lbm)
-        neighbor_bearing_measurement = None
+#        neighbor_bearing_measurement = None ##reset so that i can check if I just got a measurement or not
     NBR_LOCK.release()
 
-    estimated_distance = (pos-estimate).norm
     estimated_bearing = gmi.Versor(estimate-pos)
+    phi_bar = estimated_bearing.rotate(-np.pi/2)
+    estimated_distance = (pos-estimate).norm
 
     if estimated_bearing.vector*bearing_measurement.vector < BEARING_THRESHOLD:
         bearing_measurement = gmi.Versor(bearing_measurement_proxy.call().bearing)
         estimate = position + bearing_measurement.vector*DESIRED_DISTANCE
         estimated_bearing = gmi.Versor(bearing_measurement.vector)
-        if not neighbor_estimated_bearing is None:
-            agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing, force_positive=True)
+        phi_bar = estimated_bearing.rotate(-np.pi/2)
         try: share_bearing_proxy.call(NODE_NAME, bearing_measurement)
         except: rp.logwarn("Error in service call")
-        if not agent_beta is None:
-            try: share_beta_proxy.call(NODE_NAME, agent_beta)
-            except: rp.logwarn("Error in service call")
 
 
-    phi_bar = estimated_bearing.rotate(-np.pi/2)
     if not neighbor_estimated_bearing is None:
         agent_beta = estimated_bearing.angle_to(neighbor_estimated_bearing, force_positive=True)
+        if not agent_beta is None and not neighbor_bearing_measurement is None:####I'm sharing the beta when the agent recieves the bearing from the neigh,i.e. if when they are on the circle, when the error is reset
+            try: share_beta_proxy.call(NODE_NAME, agent_beta)
+            except: rp.logwarn("Error in service call")
+            neighbor_bearing_measurement = None
+            # if NODE_NAME=="Crazyflie1":
+            #     rp.logwarn("CF1 has recieved a new bearing from neighborrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
+            # if NODE_NAME=="agent1":
+            #     rp.logwarn("CF1 has recieved a new bearing from neighborrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr")
     #if not neighbor_last_beta is None:
         #neighbor_estimated_bearing = neighbor_estimated_bearing.rotate(
             #STEP*K_PHI*(ALPHA+neighbor_last_beta))
-        neighbor_estimated_bearing = neighbor_estimated_bearing.rotate(STEP*K_PHI*(ALPHA+agent_beta))
+        neighbor_estimated_bearing = neighbor_estimated_bearing.rotate(STEP*K_PHI*(ALPHA/K_ALPHA+agent_beta))
 
     vel = K_D*estimated_bearing.vector*(estimated_distance-DESIRED_DISTANCE)
     if not agent_beta is None:
-        vel += K_PHI*estimated_distance*phi_bar.vector*(ALPHA*agent_beta)
+        vel += K_PHI*estimated_distance*phi_bar.vector*(ALPHA/K_ALPHA+agent_beta)
+        # if NODE_NAME=="agent1":
+        #     rp.logwarn("CF1 has this speed")
+        #     rp.logwarn(K_PHI*(ALPHA/K_ALPHA+agent_beta))
     else:
         vel += K_PHI*estimated_distance*phi_bar.vector*ALPHA
     if rep.norm>0:
         vel += repulsion
+
+
+
+
+
+
 
     cmdvel_pub.publish(vel.serialize())
     est_pub.publish(estimate.serialize())

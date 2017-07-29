@@ -2,7 +2,9 @@
   
   <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
 
-  <group ns='Crazyflie1'>
+
+
+    <group ns='Crazyflie1'>
 
 
     <param name='rate' type='double' value='250.0'/>
@@ -23,7 +25,7 @@
     </rosparam>
 
     <rosparam param='initial_goal'>
-      [-0.5 ,0.5 ,0.8]
+      [-0.8 ,0.8 ,0.8]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -54,111 +56,6 @@
 
 
 
-  <group ns='Crazyflie2'>
-
-
-    <param name='rate' type='double' value='250.0'/>
-
-
-    <rosparam param='node_name'>
-      'Crazyflie2'
-    </rosparam>
-
-    <param name='delay' type='double' value='2.0'/>
-
-    <rosparam param='initial_position'>
-      [0,0]
-    </rosparam>
-
-    <rosparam param='initial_estimate'>
-      [0.2, 0.2]
-    </rosparam>
-
-    <rosparam param='initial_goal'>
-      [-0.5 ,-0.5 ,0.5]
-    </rosparam>
-
-    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
-    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
-    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
-  
-
-    <node name='bridge'
-      pkg='et_circumnavigation'
-      type='bridge.py'
-      output='screen'/>
-
-    <node name='planner'
-      pkg='et_circumnavigation'
-      type='planner.py'
-      output='screen'/>
-
-    <node name='sensor_simulator_stationary'
-      pkg='et_circumnavigation'
-      type='sensor_simulator_stationary.py'/>
-
-    <node name='position_bridge'
-      pkg='et_circumnavigation'
-      type='position_bridge.py'
-      output='screen'/>
-
-  </group>
-
-
-  <group ns='Crazyflie3'>
-
-
-    <param name='rate' type='double' value='250.0'/>
-
-
-    <rosparam param='node_name'>
-      'Crazyflie3'
-    </rosparam>
-
-    <param name='delay' type='double' value='2.0'/>
-
-    <rosparam param='initial_position'>
-      [0,0]
-    </rosparam>
-
-    <rosparam param='initial_estimate'>
-      [0.2, 0.2]
-    </rosparam>
-
-    <rosparam param='initial_goal'>
-      [0.5 ,0.5 ,1.0]
-    </rosparam>
-
-    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
-    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
-    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
-  
-
-    <node name='bridge'
-      pkg='et_circumnavigation'
-      type='bridge.py'
-      output='screen'/>
-
-    <node name='planner'
-      pkg='et_circumnavigation'
-      type='planner.py'
-      output='screen'/>
-
-    <node name='sensor_simulator_stationary'
-      pkg='et_circumnavigation'
-      type='sensor_simulator_stationary.py'/>
-
-    <node name='position_bridge'
-      pkg='et_circumnavigation'
-      type='position_bridge.py'
-      output='screen'/>
-
-  </group>
-
-
-
-
-    
 
 
     <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
@@ -166,19 +63,17 @@
     <arg name="frame" value="Crazyflie1" />
    </include>
 
-    <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
-    <arg name="uri" value="radio://0/90/2M/E7E7E7E7BC" />
-    <arg name="frame" value="Crazyflie2" />
-   </include>
-
-    <include file="$(find crazyflie_demo)/launch/mine_hover_experiment.launch">
-    <arg name="uri" value="radio://0/90/2M/E7E7E7E7DE" />
-    <arg name="frame" value="Crazyflie3" />
-   </include>
 
 
 
   <include file="$(find qualisys)/launch/qualisys.launch"/>
+
+   <include file="$(find qualisys)/launch/qualisys_odom.launch">
+   <arg name="model" value="Crazyflie1" />
+  </include>
+
+
+
 
 ## running driver and sending commands via radio
   <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">

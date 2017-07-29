@@ -16,7 +16,7 @@ started=False
 t=0.0
 start_time=0.0
 position=None
-frequency=20
+frequency=5
 
 LOCK=thd.Lock()
 
@@ -68,7 +68,7 @@ rospy.Subscriber(
     name='cmdvel',
     data_class=gms.Vector,
     callback=cmdvel_callback,
-    queue_size=10)
+    queue_size=1)
 
 def position_callback(msg):
     global position
@@ -79,7 +79,7 @@ rospy.Subscriber(
     name='position',
     data_class=gms.Point,
     callback=position_callback,
-    queue_size=10)
+    queue_size=1)
 
 #listener.waitForTransform(worldFrame, "/Crazyflie1", rospy.Time(), rospy.Duration(10.0))
 
@@ -97,6 +97,7 @@ while not rospy.is_shutdown() and not circum:
     msg.pose.orientation.y = quaternion[1]
     msg.pose.orientation.z = quaternion[2]
     msg.pose.orientation.w = quaternion[3]
+    goal=initial_goal
     LOCK.release()
     #hover goal publishing
     msg.header.seq += 1
@@ -134,7 +135,11 @@ while not rospy.is_shutdown() and circum and not start:
 while not rospy.is_shutdown() and circum:
     LOCK.acquire()
     #Integration
-    goal= position+velocity*TIME_STEP
+    goal2=np.array([goal[0], goal[1]])
+    rospy.logwarn(np.linalg.norm(position-goal2))
+    if np.linalg.norm(position-goal2)<0.07:
+        goal= position+velocity*TIME_STEP
+        rospy.logwarn("goal updated!!!!!!!!!!!!!!!!")
     msg = PoseStamped()
     msg.header.seq = 0
     msg.header.stamp = rospy.Time.now()
@@ -147,6 +152,7 @@ while not rospy.is_shutdown() and circum:
     msg.pose.orientation.y = quaternion[1]
     msg.pose.orientation.z = quaternion[2]
     msg.pose.orientation.w = quaternion[3]
+    rospy.logwarn(goal)
     LOCK.release()
     #Position publishing
     pub_goal.publish(msg)

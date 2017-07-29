@@ -57,6 +57,7 @@ catkin_python_setup()
    FILES
    ChangeTopology.srv
    AddAgent.srv
+   RemoveAgent.srv
    BearingMeasurement.srv
    ChangeFollower.srv
    ShareBearing.srv

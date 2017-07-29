@@ -15,7 +15,7 @@
     <param name='delay' type='double' value='1.0'/>
 
     <rosparam param='initial_position'>
-      [-1.0, 0.8]
+      [1.2, 1.2]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -39,16 +39,16 @@
   </group>
 
 
-  <group ns='agent2'>
+<!--   <group ns='agent2'>
 
     <rosparam param='node_name'>
       'agent2'
     </rosparam>
 
-    <param name='delay' type='double' value='2.0'/>
+    <param name='delay' type='double' value='1.2'/>
 
     <rosparam param='initial_position'>
-      [-1.0,1.0]
+      [-1.2, -1.2]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -77,10 +77,10 @@
       'agent3'
     </rosparam>
 
-    <param name='delay' type='double' value='3.0'/>
+    <param name='delay' type='double' value='5.0'/>
 
     <rosparam param='initial_position'>
-      [1.0,1.0]
+      [1.2, -1.2]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -101,22 +101,19 @@
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
 
-  </group>
+  </group> -->
 
+ <!--    <group ns='agent4'>
 
-
-
-
-  <group ns='agent4'>
 
     <rosparam param='node_name'>
       'agent4'
     </rosparam>
 
-    <param name='delay' type='double' value='4.0'/>
+    <param name='delay' type='double' value='8.0'/>
 
     <rosparam param='initial_position'>
-      [1.0,-1.0]
+      [1.8, 1.8]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -136,24 +133,21 @@
     <node name='sensor_simulator_stationary'
       pkg='et_circumnavigation'
       type='sensor_simulator_stationary.py'/>
-
-    <!--node name='neighbor_designer'
-      pkg='et_circumnavigation'
-      type='neighbor_designer.py'/-->
 
   </group>
 
 
   <group ns='agent5'>
 
+
     <rosparam param='node_name'>
       'agent5'
     </rosparam>
 
-    <param name='delay' type='double' value='5.0'/>
+    <param name='delay' type='double' value='8.5'/>
 
     <rosparam param='initial_position'>
-      [-1.0,-1.0]
+      [1.2, 1.2]
     </rosparam>
 
     <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
@@ -177,9 +171,118 @@
   </group>
 
 
+  <group ns='agent6'>
 
 
+    <rosparam param='node_name'>
+      'agent6'
+    </rosparam>
+
+    <param name='delay' type='double' value='8.6'/>
+
+    <rosparam param='initial_position'>
+      [-1.2, 1.2]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+
+
+    <node name='vehicle_simulator'
+      pkg='et_circumnavigation'
+      type='vehicle_simulator.py'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='et_circumnavigation'
+      type='sensor_simulator_stationary.py'/>
+
+  </group>
+
+
+  <group ns='agent7'>
+
+
+    <rosparam param='node_name'>
+      'agent7'
+    </rosparam>
+
+    <param name='delay' type='double' value='8.7'/>
+
+    <rosparam param='initial_position'>
+      [-1.2, -1.2]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+
+
+    <node name='vehicle_simulator'
+      pkg='et_circumnavigation'
+      type='vehicle_simulator.py'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='et_circumnavigation'
+      type='sensor_simulator_stationary.py'/>
+
+  </group>
+
+
+  <group ns='agent8'>
+
+
+    <rosparam param='node_name'>
+      'agent8'
+    </rosparam>
+
+    <param name='delay' type='double' value='9.0'/>
+
+    <rosparam param='initial_position'>
+      [-1.2, -1.2]
+    </rosparam>
+
+    <rosparam command='load' file='$(find et_circumnavigation)/param/target.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/estimate_stationary.yaml'/>
+    <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
+
+
+    <node name='vehicle_simulator'
+      pkg='et_circumnavigation'
+      type='vehicle_simulator.py'/>
+
+    <node name='planner'
+      pkg='et_circumnavigation'
+      type='planner.py'
+      output='screen'/>
+
+    <node name='sensor_simulator_stationary'
+      pkg='et_circumnavigation'
+      type='sensor_simulator_stationary.py'/>
+
+  </group> -->
+
+
+
+
+
+<!--   <param name='delay' type='double' value='30.0'/>
+  <param name='agent_to_remove' type='str' value='agent2'/>
   
+  <node name='remove_agent_2'
+    pkg='et_circumnavigation'
+    type='remove_agent.py'
+    output='screen'/> -->
 
   <rosparam command='load' file='$(find et_circumnavigation)/param/planner_stationary.yaml'/>
 
@@ -194,5 +297,8 @@
     pkg='et_circumnavigation'
     type='plotter_stationary.py'/>
 
+
+  <node pkg="rosbag" type="record" name="recording_node"
+   args="-O $(find et_circumnavigation)/trial -a"/> 
 
 </launch>

@@ -17,30 +17,29 @@ position = gmi.Vector(*rp.get_param('initial_position'))
 velocity = None
 
 #stop=False
-#stop_publish=False
+stop_publish=False
 
 delay=rp.get_param('delay')
 rp.sleep(delay)
 rp.init_node('integrator')
 
-FREQUENCY = 60.0
+FREQUENCY = 10.0
 RATE = rp.Rate(FREQUENCY)
 TIME_STEP = 1.0/FREQUENCY
 
 
-# Handler for the service "RemoveVehicle"
-# def remove_vehicle_handler(req):
-#     global stop_publish
-#     LOCK.acquire()
-#     stop_publish=True
-#     LOCK.release()
-#     return dns.RemoveAgentResponse()
 
-# rp.Service('RemoveVehicle', dns.RemoveAgent, remove_vehicle_handler)
+def remove_vehicle_handler(req):
+    global stop_publish
+    LOCK.acquire()
+    stop_publish=True
+    LOCK.release()
+    return dns.RemoveAgentResponse()
+rp.Service('RemoveVehicle', dns.RemoveAgent, remove_vehicle_handler)
 
 
 #Publisher
-pub = rp.Publisher('position', gms.Point, queue_size=10)
+pub = rp.Publisher('position', gms.Point, queue_size=5)
 
 
 #Subscriber

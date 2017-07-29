@@ -38,7 +38,7 @@ worldFrame='/world'
 
 
 #Publisher
-pub_position = rospy.Publisher('position', gms.Point, queue_size=10)
+pub_position = rospy.Publisher('position', gms.Point, queue_size=1)
 
 listener = tf.TransformListener()
 
